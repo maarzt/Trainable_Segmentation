@@ -205,50 +205,8 @@ public class WekaSegmentation {
 	 */
 	public WekaSegmentation(ImagePlus trainingImage)
 	{
-		// set class label names
-		for(int i=0; i<MAX_NUM_CLASSES; i++)
-			this.classLabels[ i ] = new String("class " + (i+1));
-
-		this.trainingImage = trainingImage;
-
-		// Initialization of Fast Random Forest classifier
-		rf = new FastRandomForest();
-		rf.setNumTrees(numOfTrees);
-		//this is the default that Breiman suggests
-		//rf.setNumFeatures((int) Math.round(Math.sqrt(featureStack.getSize())));
-		//but this seems to work better
-		rf.setNumFeatures(randomFeatures);
-		// Random seed
-		rf.setSeed( (new Random()).nextInt() );
-
-		// Set number of threads
-		rf.setNumThreads( Prefs.getThreads() );
-
-		classifier = rf;
-
-		// Initialize feature stack (no features yet)
-		featureStackArray = new FeatureStackArray(trainingImage.getImageStackSize(),
-				minimumSigma, maximumSigma, useNeighbors, membraneThickness, membranePatchSize,
-				enabledFeatures);
-
-		featureStackToUpdateTrain = new boolean[trainingImage.getImageStackSize()];
-		featureStackToUpdateTest = new boolean[trainingImage.getImageStackSize()];
-		Arrays.fill(featureStackToUpdateTest, true);
-
-		examples = new Vector[trainingImage.getImageStackSize()];
-		for(int i=0; i< trainingImage.getImageStackSize(); i++)
-		{
-			examples[i] = new Vector<ArrayList<Roi>>(MAX_NUM_CLASSES);
-
-			for(int j=0; j<MAX_NUM_CLASSES; j++)
-				examples[i].add(new ArrayList<Roi>());
-
-			// Initialize each feature stack (one per slice)
-			featureStackArray.set(new FeatureStack(trainingImage.getImageStack().getProcessor(i+1)), i);
-		}
-		// start with two classes
-		addClass();
-		addClass();
+		this();
+		setTrainingImage(trainingImage);
 	}
 
 	/**
