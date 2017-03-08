@@ -16,12 +16,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -833,16 +828,13 @@ public class WekaSegmentation {
 			IJ.log("Feature stack is now updated.");
 		}
 
-		// Detect class index
-		int classIndex = 0;
-		for(classIndex = 0 ; classIndex < this.getClassLabels().length; classIndex++)
-			if(className.equalsIgnoreCase(this.getClassLabels()[classIndex]))
-				break;
-		if(classIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + className + "' not found.");
+		int classIndex;
+		try {
+			classIndex = getClassIndex(className);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
+
 		// Create loaded training data if it does not exist yet
 		if(null == loadedTrainingData)
 		{
@@ -922,23 +914,11 @@ public class WekaSegmentation {
 			IJ.log("Feature stack is now updated.");
 		}
 
-		// Detect class indexes
-		int classIndex1 = 0;
-		for(classIndex1 = 0 ; classIndex1 < this.getClassLabels().length; classIndex1++)
-			if(className1.equalsIgnoreCase(this.getClassLabels()[classIndex1]))
-				break;
-		if(classIndex1 == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + className1 + "' not found.");
-			return false;
-		}
-		int classIndex2 = 0;
-		for(classIndex2 = 0 ; classIndex2 < this.getClassLabels().length; classIndex2++)
-			if(className2.equalsIgnoreCase(this.getClassLabels()[classIndex2]))
-				break;
-		if(classIndex2 == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + className2 + "' not found.");
+		int classIndex1, classIndex2;
+		try {
+			classIndex1 = getClassIndex(className1);
+			classIndex2 = getClassIndex(className2);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1013,6 +993,14 @@ public class WekaSegmentation {
 				" attributes, " + loadedTrainingData.numClasses() + " classes).");
 
 		return true;
+	}
+
+	private int getClassIndex(String className) {
+		for(int i = 0; i < this.getClassLabels().length; i++)
+			if(className.equalsIgnoreCase(this.getClassLabels()[i]))
+				return i;
+		IJ.log("Error: class named '" + className + "' not found.");
+		throw new NoSuchElementException();
 	}
 
 	/**
@@ -1225,23 +1213,11 @@ public class WekaSegmentation {
 			IJ.log("Feature stack is now updated.");
 		}
 
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1349,16 +1325,11 @@ public class WekaSegmentation {
 		// Detect class indexes (in case they differ from the indexes in
 		// getClassLabels()
 		int classIndex[] = new int[ classNames.length ];
-		for(int i = 0; i < classIndex.length; i++ )
-		{
-			for( classIndex[ i ] = 0 ; classIndex[ i ] < getClassLabels().length; classIndex[ i ]++ )
-				if( classNames[i].equalsIgnoreCase( getClassLabels()[ classIndex[i] ] ) )
-					break;
-			if( classIndex[i] == getClassLabels().length)
-			{
-				IJ.log("Error: class named '" + classNames[ i ] + "' not found.");
-				return false;
-			}
+		try {
+			for (int i = 0; i < classIndex.length; i++)
+				classIndex[i] = getClassIndex(classNames[i]);
+		} catch(NoSuchElementException e) {
+			return false;
 		}
 
 		// Create loaded training data if it does not exist yet
@@ -1465,23 +1436,11 @@ public class WekaSegmentation {
 			IJ.log("Feature stack is now updated.");
 		}
 
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1597,24 +1556,11 @@ public class WekaSegmentation {
 			String blackClassName,
 			int numSamples)
 	{
-
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1696,23 +1642,11 @@ public class WekaSegmentation {
 			String blackClassName)
 	{
 
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1794,23 +1728,11 @@ public class WekaSegmentation {
 			int numSamples)
 	{
 
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -1930,23 +1852,11 @@ public class WekaSegmentation {
 			IJ.log("Feature stack is now updated.");
 		}
 
-		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
-			return false;
-		}
-		int blackClassIndex = 0;
-		for(blackClassIndex = 0 ; blackClassIndex < this.getClassLabels().length; blackClassIndex++)
-			if(blackClassName.equalsIgnoreCase(this.getClassLabels()[blackClassIndex]))
-				break;
-		if(blackClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + blackClassName + "' not found.");
+		int whiteClassIndex, blackClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+			blackClassIndex = getClassIndex(blackClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -2076,13 +1986,10 @@ public class WekaSegmentation {
 		}
 
 		// Detect class indexes
-		int whiteClassIndex = 0;
-		for(whiteClassIndex = 0 ; whiteClassIndex < this.getClassLabels().length; whiteClassIndex++)
-			if(whiteClassName.equalsIgnoreCase(this.getClassLabels()[whiteClassIndex]))
-				break;
-		if(whiteClassIndex == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + whiteClassName + "' not found.");
+		int whiteClassIndex;
+		try {
+			whiteClassIndex = getClassIndex(whiteClassName);
+		} catch(NoSuchElementException e) {
 			return false;
 		}
 
@@ -3726,27 +3633,13 @@ public class WekaSegmentation {
 			String className1,
 			String className2)
 	{
-
-		// Detect class indexes
-		int classIndex1 = 0;
-		for(classIndex1 = 0 ; classIndex1 < this.getClassLabels().length; classIndex1++)
-			if(className1.equalsIgnoreCase(this.getClassLabels()[classIndex1]))
-				break;
-		if(classIndex1 == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + className1 + "' not found.");
+		int classIndex1, classIndex2;
+		try {
+			classIndex1 = getClassIndex(className1);
+			classIndex2 = getClassIndex(className2);
+		} catch(NoSuchElementException e) {
 			return;
 		}
-		int classIndex2 = 0;
-		for(classIndex2 = 0 ; classIndex2 < this.getClassLabels().length; classIndex2++)
-			if(className2.equalsIgnoreCase(this.getClassLabels()[classIndex2]))
-				break;
-		if(classIndex2 == this.getClassLabels().length)
-		{
-			IJ.log("Error: class named '" + className2 + "' not found.");
-			return;
-		}
-
 		updateDataClassification(this.loadedTrainingData, labels, classIndex1, classIndex2);
 	}
 
