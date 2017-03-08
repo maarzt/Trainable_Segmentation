@@ -850,11 +850,8 @@ public class WekaSegmentation {
 			}
 
 
-		IJ.log("Added " + nl + " instances of '" + className +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(nl, className);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -921,12 +918,9 @@ public class WekaSegmentation {
 				loadedTrainingData.add(featureStack.createInstance(x, y, classIndex));
 			}
 
-		IJ.log("Added " + n1 + " instances of '" + className1 +"'.");
-		IJ.log("Added " + n2 + " instances of '" + className2 +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(n1, className1);
+		logAddNInstancesOf(n2, className2);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -976,11 +970,9 @@ public class WekaSegmentation {
 			}
 
 		for( int i=0; i < numOfClasses; i ++ )
-				IJ.log("Added " + numSamples[ i ] + " instances of '" + loadedClassNames.get(i) + "'.");
+			logAddNInstancesOf(numSamples[ i ], loadedClassNames.get(i));
 
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1039,11 +1031,9 @@ public class WekaSegmentation {
 		}
 
 		for( int j = 0; j < numOfClasses ; j ++ )
-			IJ.log("Added " + numSamples + " instances of '" + loadedClassNames.get( j ) +"'.");
+			logAddNInstancesOf(numSamples, loadedClassNames.get( j ));
 
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1112,12 +1102,9 @@ public class WekaSegmentation {
 					whiteCoordinates.get(randomWhite).y, whiteClassIndex));
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + numSamples + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1184,12 +1171,9 @@ public class WekaSegmentation {
 		}
 
 		for( int i=0; i<classNames.length; i++ )
-			IJ.log( "Added " + numSamples + " instances of '"
-					+ classNames[i] +"'.");
+			logAddNInstancesOf(numSamples, classNames[i]);
 
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1280,12 +1264,9 @@ public class WekaSegmentation {
 					whiteCoordinates.get(randomWhite).y, whiteClassIndex));
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + numSamples + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1340,12 +1321,9 @@ public class WekaSegmentation {
 					(int) (classPoints[ 1 ].get(randomWhite).y), whiteClassIndex));
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + numSamples + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1394,12 +1372,9 @@ public class WekaSegmentation {
 																	(int) (classPoints[ 1 ].get( i ).y),
 																	whiteClassIndex));
 
-		IJ.log("Added " + classPoints[1].size() + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + classPoints[0].size() + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(classPoints[1].size(), whiteClassName);
+		logAddNInstancesOf(classPoints[0].size(), blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1478,12 +1453,9 @@ public class WekaSegmentation {
 			loadedTrainingData.add( whiteInstance );
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + numSamples + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1584,12 +1556,9 @@ public class WekaSegmentation {
 			loadedTrainingData.add(whiteSample);
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-		IJ.log("Added " + numSamples + " instances of '" + blackClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -1648,11 +1617,8 @@ public class WekaSegmentation {
 					whiteCoordinates.get(randomWhite).y, whiteClassIndex));
 		}
 
-		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
-
-		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
-				" instances, " + loadedTrainingData.numAttributes() +
-				" attributes, " + loadedTrainingData.numClasses() + " classes).");
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logTrainingDatasetUpdated();
 
 		return true;
 	}
@@ -6026,6 +5992,16 @@ public class WekaSegmentation {
 
 			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
 		}
+	}
+
+	private void logAddNInstancesOf(int numSamples, String whiteClassName) {
+		IJ.log("Added " + numSamples + " instances of '" + whiteClassName +"'.");
+	}
+
+	private void logTrainingDatasetUpdated() {
+		IJ.log("Training dataset updated ("+ loadedTrainingData.numInstances() +
+				" instances, " + loadedTrainingData.numAttributes() +
+				" attributes, " + loadedTrainingData.numClasses() + " classes).");
 	}
 
 }
