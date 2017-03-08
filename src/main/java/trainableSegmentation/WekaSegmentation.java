@@ -817,16 +817,7 @@ public class WekaSegmentation {
 			FeatureStack featureStack,
 			String className)
 	{
-
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		int classIndex;
 		try {
@@ -904,15 +895,7 @@ public class WekaSegmentation {
 			String className1,
 			String className2)
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		int classIndex1, classIndex2;
 		try {
@@ -1016,15 +999,7 @@ public class WekaSegmentation {
 			ImagePlus labelImage,
 			FeatureStack featureStack )
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log( "Feature stack is now updated." );
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		// Create loaded training data if it does not exist yet
 		if( null == loadedTrainingData )
@@ -1099,16 +1074,7 @@ public class WekaSegmentation {
 			FeatureStack featureStack,
 			int numSamples )
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList( this.featureNames, featureStack );
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
-
+		updateFeaturesIfNecessary(featureStack);
 
 		// Create loaded training data if it does not exist yet
 		if( null == loadedTrainingData )
@@ -1203,15 +1169,7 @@ public class WekaSegmentation {
 			String blackClassName,
 			int numSamples)
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		int whiteClassIndex, blackClassIndex;
 		try {
@@ -1312,18 +1270,8 @@ public class WekaSegmentation {
 			String classNames[],
 			int numSamples)
 	{
-		// Update features if necessary
-		if( featureStack.getSize() < 2 )
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
-		// Detect class indexes (in case they differ from the indexes in
-		// getClassLabels()
 		int classIndex[] = new int[ classNames.length ];
 		try {
 			for (int i = 0; i < classIndex.length; i++)
@@ -1426,15 +1374,7 @@ public class WekaSegmentation {
 			String blackClassName,
 			int numSamples)
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		int whiteClassIndex, blackClassIndex;
 		try {
@@ -1842,15 +1782,7 @@ public class WekaSegmentation {
 			String blackClassName,
 			int numSamples)
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
 		int whiteClassIndex, blackClassIndex;
 		try {
@@ -1975,17 +1907,8 @@ public class WekaSegmentation {
 			String whiteClassName,
 			int numSamples)
 	{
-		// Update features if necessary
-		if(featureStack.getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStack.updateFeaturesMT();
-			filterFeatureStackByList(this.featureNames, featureStack);
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(featureStack);
 
-		// Detect class indexes
 		int whiteClassIndex;
 		try {
 			whiteClassIndex = getClassIndex(whiteClassName);
@@ -2225,15 +2148,7 @@ public class WekaSegmentation {
 			String whiteClassName,
 			String blackClassName)
 	{
-		// Update features if necessary
-		if(featureStackArray.get(n).getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStackArray.get(n).updateFeaturesMT();
-			filterFeatureStackByList();
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(n);
 
 		if(labelImage.getWidth() != this.trainingImage.getWidth()
 				|| labelImage.getHeight() != this.trainingImage.getHeight())
@@ -2336,16 +2251,7 @@ public class WekaSegmentation {
 			String whiteClassName,
 			String blackClassName)
 	{
-
-		// Update features if necessary
-		if(featureStackArray.get(n).getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStackArray.get(n).updateFeaturesMT();
-			filterFeatureStackByList();
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(n);
 
 		if(labelImage.getWidth() != this.trainingImage.getWidth()
 				|| labelImage.getHeight() != this.trainingImage.getHeight())
@@ -2987,15 +2893,7 @@ public class WekaSegmentation {
 			String whiteClassName,
 			String blackClassName)
 	{
-		// Update features if necessary
-		if(featureStackArray.get(n).getSize() < 2)
-		{
-			IJ.log("Creating feature stack...");
-			featureStackArray.get(n).updateFeaturesMT();
-			filterFeatureStackByList();
-			updateFeatures = false;
-			IJ.log("Feature stack is now updated.");
-		}
+		updateFeaturesIfNecessary(n);
 
 		if(labelImage.getWidth() != this.trainingImage.getWidth()
 				|| labelImage.getHeight() != this.trainingImage.getHeight())
@@ -6363,6 +6261,31 @@ public class WekaSegmentation {
 
 	public boolean isProcessing3D() {
 		return isProcessing3D;
+	}
+
+	// -- helper methods --
+
+	private void updateFeaturesIfNecessary(FeatureStack featureStack) {
+		// Update features if necessary
+		if(featureStack.getSize() < 2)
+		{
+			IJ.log("Creating feature stack...");
+			featureStack.updateFeaturesMT();
+			filterFeatureStackByList(this.featureNames, featureStack);
+			updateFeatures = false;
+			IJ.log("Feature stack is now updated.");
+		}
+	}
+
+	private void updateFeaturesIfNecessary(int n) {
+		if(featureStackArray.get(n).getSize() < 2)
+		{
+			IJ.log("Creating feature stack...");
+			featureStackArray.get(n).updateFeaturesMT();
+			filterFeatureStackByList();
+			updateFeatures = false;
+			IJ.log("Feature stack is now updated.");
+		}
 	}
 
 }
