@@ -1217,6 +1217,29 @@ public class WekaSegmentation {
 		// Create lists of coordinates of pixels of both classes
 		ArrayList<Point> blackCoordinates = new ArrayList<Point>();
 		ArrayList<Point> whiteCoordinates = new ArrayList<Point>();
+		extractBlackAndWhitePixels(labelImage, mask, blackCoordinates, whiteCoordinates);
+
+		// Select random samples from both classes
+		Random rand = new Random();
+		for(int i=0; i<numSamples; i++)
+		{
+			int randomBlack = rand.nextInt( blackCoordinates.size() );
+			int randomWhite = rand.nextInt( whiteCoordinates.size() );
+
+			loadedTrainingData.add(featureStack.createInstance( blackCoordinates.get(randomBlack).x,
+					blackCoordinates.get(randomBlack).y, blackClassIndex));
+			loadedTrainingData.add(featureStack.createInstance(whiteCoordinates.get(randomWhite).x,
+					whiteCoordinates.get(randomWhite).y, whiteClassIndex));
+		}
+
+		logAddNInstancesOf(numSamples, whiteClassName);
+		logAddNInstancesOf(numSamples, blackClassName);
+		logTrainingDatasetUpdated();
+
+		return true;
+	}
+
+	private static void extractBlackAndWhitePixels(ImageProcessor labelImage, ImageProcessor mask, ArrayList<Point> blackCoordinates, ArrayList<Point> whiteCoordinates) {
 		final int width = labelImage.getWidth();
 		final int height = labelImage.getHeight();
 
@@ -1250,25 +1273,6 @@ public class WekaSegmentation {
 
 				}
 		}
-
-		// Select random samples from both classes
-		Random rand = new Random();
-		for(int i=0; i<numSamples; i++)
-		{
-			int randomBlack = rand.nextInt( blackCoordinates.size() );
-			int randomWhite = rand.nextInt( whiteCoordinates.size() );
-
-			loadedTrainingData.add(featureStack.createInstance( blackCoordinates.get(randomBlack).x,
-					blackCoordinates.get(randomBlack).y, blackClassIndex));
-			loadedTrainingData.add(featureStack.createInstance(whiteCoordinates.get(randomWhite).x,
-					whiteCoordinates.get(randomWhite).y, whiteClassIndex));
-		}
-
-		logAddNInstancesOf(numSamples, whiteClassName);
-		logAddNInstancesOf(numSamples, blackClassName);
-		logTrainingDatasetUpdated();
-
-		return true;
 	}
 
 
@@ -1502,38 +1506,7 @@ public class WekaSegmentation {
 		// Create lists of coordinates of pixels of both classes
 		ArrayList<Point> blackCoordinates = new ArrayList<Point>();
 		ArrayList<Point> whiteCoordinates = new ArrayList<Point>();
-		final int width = labelImage.getWidth();
-		final int height = labelImage.getHeight();
-
-		if( null != mask )
-		{
-			for(int y = 0 ; y < height; y++)
-				for(int x = 0 ; x < width ; x++)
-				{
-					// White pixels are added to the class 1
-					// and black to class 2
-					if(mask.getPixelValue(x, y) > 0)
-					{
-						if(labelImage.getPixelValue(x, y) > 0)
-							whiteCoordinates.add(new Point(x, y));
-						else
-							blackCoordinates.add(new Point(x, y));
-					}
-				}
-		}
-		else
-		{
-			for(int y = 0 ; y < height; y++)
-				for(int x = 0 ; x < width ; x++)
-				{
-					// White pixels are added to the class 1
-					// and black to class 2
-					if(labelImage.getPixelValue(x, y) > 0)
-						whiteCoordinates.add(new Point(x, y));
-					else
-						blackCoordinates.add(new Point(x, y));
-				}
-		}
+		extractBlackAndWhitePixels(labelImage, mask, blackCoordinates, whiteCoordinates);
 		// Select random samples from both classes
 		Random rand = new Random();
 		for(int i=0; i<numSamples; i++)
