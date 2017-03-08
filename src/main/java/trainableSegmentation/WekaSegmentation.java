@@ -827,26 +827,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++){
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
-
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 
 		// Check all pixels different from black
@@ -904,36 +885,8 @@ public class WekaSegmentation {
 		} catch(NoSuchElementException e) {
 			return false;
 		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
-		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
 
 		// Check all pixels
 		final int width = labelImage.getWidth();
@@ -1002,34 +955,7 @@ public class WekaSegmentation {
 		updateFeaturesIfNecessary(featureStack);
 
 		// Create loaded training data if it does not exist yet
-		if( null == loadedTrainingData )
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for ( int i=1; i<=featureStack.getSize(); i++ )
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add( new Attribute( attString ) );
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for( int i = 0; i < numOfClasses ; i ++ )
-				loadedClassNames.add( getClassLabels()[ i ] );
-			attributes.add( new Attribute( "class", loadedClassNames ) );
-			loadedTrainingData = new Instances( "segment", attributes, 1 );
-
-			loadedTrainingData.setClassIndex( loadedTrainingData.numAttributes() - 1 );
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Check all pixels
 		final int width = labelImage.getWidth();
@@ -1077,34 +1003,7 @@ public class WekaSegmentation {
 		updateFeaturesIfNecessary(featureStack);
 
 		// Create loaded training data if it does not exist yet
-		if( null == loadedTrainingData )
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add( new Attribute( attString ) );
-			}
-
-			if( featureStack.useNeighborhood() )
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add( new Attribute( new String( "original_neighbor_" + (i+1) ) ) );
-				}
-
-			// Update list of names of loaded classes
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of each class
 		ArrayList<Point>[] classCoordinates = new ArrayList[ numOfClasses ];
@@ -1180,35 +1079,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of both classes
 		ArrayList<Point> blackCoordinates = new ArrayList<Point>();
@@ -1281,35 +1152,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of all classes
 		ArrayList<Point> classCoordinates[] = new ArrayList[ classNames.length ];
@@ -1385,34 +1228,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of both classes
 		ArrayList<Point> blackCoordinates = new ArrayList<Point>();
@@ -1504,35 +1320,7 @@ public class WekaSegmentation {
 			return false;
 		}
 
-		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=fsa.getNumOfFeatures(); i++)
-			{
-				String attString = fsa.getLabel( i );
-				attributes.add(new Attribute(attString));
-			}
-
-			if(fsa.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(fsa);
 
 		// Select random samples from both classes
 		Random rand = new Random();
@@ -1590,35 +1378,7 @@ public class WekaSegmentation {
 			return false;
 		}
 
-		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=fsa.getNumOfFeatures(); i++)
-			{
-				String attString = fsa.getLabel( i );
-				attributes.add(new Attribute(attString));
-			}
-
-			if(fsa.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(fsa);
 
 		// Add samples to both classes
 		for(int i=0; i<classPoints[0].size(); i++)
@@ -1676,35 +1436,7 @@ public class WekaSegmentation {
 			return false;
 		}
 
-		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=fsa.getNumOfFeatures(); i++)
-			{
-				String attString = fsa.getLabel( i );
-				attributes.add(new Attribute(attString));
-			}
-
-			if(fsa.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(fsa);
 
 		final int width = weights.getWidth();
 
@@ -1793,34 +1525,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of both classes
 		ArrayList<Point> blackCoordinates = new ArrayList<Point>();
@@ -1917,34 +1622,7 @@ public class WekaSegmentation {
 		}
 
 		// Create loaded training data if it does not exist yet
-		if(null == loadedTrainingData)
-		{
-			IJ.log("Initializing loaded data...");
-			// Create instances
-			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-			for (int i=1; i<=featureStack.getSize(); i++)
-			{
-				String attString = featureStack.getSliceLabel(i);
-				attributes.add(new Attribute(attString));
-			}
-
-			if(featureStack.useNeighborhood())
-				for (int i=0; i<8; i++)
-				{
-					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-				}
-
-			// Update list of names of loaded classes
-			// (we assume the first two default class names)
-			loadedClassNames = new ArrayList<String>();
-			for(int i = 0; i < numOfClasses ; i ++)
-				loadedClassNames.add(getClassLabels()[i]);
-			attributes.add(new Attribute("class", loadedClassNames));
-			loadedTrainingData = new Instances("segment", attributes, 1);
-
-			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
-		}
+		initLoadedTrainingDataIfNecessary(featureStack);
 
 		// Create lists of coordinates of pixels of white class
 		ArrayList<Point> whiteCoordinates = new ArrayList<Point>();
@@ -6285,6 +5963,68 @@ public class WekaSegmentation {
 			filterFeatureStackByList();
 			updateFeatures = false;
 			IJ.log("Feature stack is now updated.");
+		}
+	}
+
+	private void initLoadedTrainingDataIfNecessary(FeatureStack featureStack) {
+		if(null == loadedTrainingData)
+		{
+			IJ.log("Initializing loaded data...");
+			// Create instances
+			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+			for (int i=1; i<=featureStack.getSize(); i++)
+			{
+				String attString = featureStack.getSliceLabel(i);
+				attributes.add(new Attribute(attString));
+			}
+
+			if(featureStack.useNeighborhood())
+				for (int i=0; i<8; i++)
+				{
+					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
+					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
+				}
+
+			// Update list of names of loaded classes
+			// (we assume the first two default class names)
+			loadedClassNames = new ArrayList<String>();
+			for(int i = 0; i < numOfClasses ; i ++)
+				loadedClassNames.add(getClassLabels()[i]);
+			attributes.add(new Attribute("class", loadedClassNames));
+			loadedTrainingData = new Instances("segment", attributes, 1);
+
+			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
+		}
+	}
+
+	private void initLoadedTrainingDataIfNecessary(FeatureStackArray fsa) {
+		if(null == loadedTrainingData)
+		{
+			IJ.log("Initializing loaded data...");
+			// Create instances
+			ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+			for (int i=1; i<=fsa.getNumOfFeatures(); i++)
+			{
+				String attString = fsa.getLabel( i );
+				attributes.add(new Attribute(attString));
+			}
+
+			if(fsa.useNeighborhood())
+				for (int i=0; i<8; i++)
+				{
+					IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
+					attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
+				}
+
+			// Update list of names of loaded classes
+			// (we assume the first two default class names)
+			loadedClassNames = new ArrayList<String>();
+			for(int i = 0; i < numOfClasses ; i ++)
+				loadedClassNames.add(getClassLabels()[i]);
+			attributes.add(new Attribute("class", loadedClassNames));
+			loadedTrainingData = new Instances("segment", attributes, 1);
+
+			loadedTrainingData.setClassIndex(loadedTrainingData.numAttributes()-1);
 		}
 	}
 
