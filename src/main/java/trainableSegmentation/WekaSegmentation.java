@@ -4440,93 +4440,13 @@ public class WekaSegmentation {
 				// Create feature stack for slice
 				IJ.showStatus("Creating features...");
 				IJ.log("Creating features of slice " + slice.getTitle() + "...");
-				final FeatureStack sliceFeatures = new FeatureStack(slice);
-				// Use the same features as the current classifier
-				sliceFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());
-				sliceFeatures.setMaximumSigma(maximumSigma);
-				sliceFeatures.setMinimumSigma(minimumSigma);
-				sliceFeatures.setMembranePatchSize(membranePatchSize);
-				sliceFeatures.setMembraneSize(membraneThickness);
-				if(!sliceFeatures.updateFeaturesST())
-				{
-					IJ.log("Classifier execution was interrupted.");
-					return null;
-				}
-				filterFeatureStackByList(featureNames, sliceFeatures);
-
-				final int width = slice.getWidth();
-				final int height = slice.getHeight();
-				final int numClasses = dataInfo.numClasses();
-
-				ImageStack classificationResult = new ImageStack(width, height);
-
-				final int numInstances = width * height;
-
-				final double[][] probArray;
-
-				if (probabilityMaps)
-					probArray = new double[numClasses][numInstances];
-				else
-					probArray = new double[1][numInstances];
-
-				IJ.log("Classifying slice " + slice.getTitle() + "...");
-
-				// auxiliary array to be filled for each instance
-				final int extra = sliceFeatures.useNeighborhood() ? 8 : 0;
-				final double[] values =
-						new double[ sliceFeatures.getSize() + 1 + extra ];
-				// create empty reusable instance
-				final ReusableDenseInstance ins =
-						new ReusableDenseInstance( 1.0, values );
-				ins.setDataset( dataInfo );
-
-				for (int x=0; x<width; x++)
-					for(int y=0; y<height; y++)
-					{
-						try{
-
-							if (0 == (x+y*width) % 4000)
-							{
-								if (Thread.currentThread().isInterrupted())
-									return null;
-								counter.addAndGet(4000);
-							}
-
-							sliceFeatures.setInstance( x, y, 0, ins, values );
-
-							if (probabilityMaps)
-							{
-								double[] prob = classifier.distributionForInstance( ins );
-								for(int k = 0 ; k < numClasses; k++)
-								{
-									probArray[k][x+y*width] = prob[ k ];
-								}
-							}
-							else
-							{
-								probArray[0][ x+y*width ] = classifier.classifyInstance( ins );
-							}
-
-						}catch(Exception e){
-
-							IJ.showMessage("Could not apply Classifier!");
-							e.printStackTrace();
-							return null;
-						}
-					}
-
-				if( probabilityMaps )
-				{
-					for(int k = 0 ; k < numClasses; k++)
-						classificationResult.addSlice("class-" + (k+1), new FloatProcessor(width, height, probArray[k]) );
-				}
-				else
-					classificationResult.addSlice("result", new FloatProcessor(width, height, probArray[0]) );
-
+				ImageStack classificationResult = classifyImageHelper(slice, dataInfo, probabilityMaps, counter, classifier);
+				if (classificationResult == null) return null;
 				return new ImagePlus("classified-slice", classificationResult);
 			}
 		};
 	}
+
 
 	/**
 	 * Classify a list of images in a concurrent way
@@ -4558,97 +4478,100 @@ public class WekaSegmentation {
 					// Create feature stack for the image
 					IJ.showStatus("Creating features...");
 					IJ.log("Creating features of slice " + image.getTitle() + ", size = " + image.getWidth() + "x" + image.getHeight() + "...");
-					final FeatureStack sliceFeatures = new FeatureStack( image );
-					// Use the same features as the current classifier
-					sliceFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());
-					sliceFeatures.setMaximumSigma(maximumSigma);
-					sliceFeatures.setMinimumSigma(minimumSigma);
-					sliceFeatures.setMembranePatchSize(membranePatchSize);
-					sliceFeatures.setMembraneSize(membraneThickness);
-					if(!sliceFeatures.updateFeaturesST())
-					{
-						IJ.log("Classifier execution was interrupted.");
-						return null;
-					}
-					filterFeatureStackByList(featureNames, sliceFeatures);
+					ImageStack classificationResult = classifyImageHelper(image, dataInfo, probabilityMaps, counter, classifier);
+					if (classificationResult == null) return null;
 
-					final int width = image.getWidth();
-					final int height = image.getHeight();
-					final int numClasses = dataInfo.numClasses();
-
-					ImageStack classificationResult = new ImageStack(width, height);
-
-					final int numInstances = width * height;
-
-					final double[][] probArray;
-
-					if (probabilityMaps)
-						probArray = new double[numClasses][numInstances];
-					else
-						probArray = new double[1][numInstances];
-
-					IJ.log("Classifying slice " + image.getTitle() + "...");
-
-					// auxiliary array to be filled for each instance
-					final int extra = sliceFeatures.useNeighborhood() ? 8 : 0;
-					final double[] values =
-							new double[ sliceFeatures.getSize() + 1 + extra ];
-					// create empty reusable instance
-					final ReusableDenseInstance ins =
-							new ReusableDenseInstance( 1.0, values );
-					ins.setDataset( dataInfo );
-
-					for (int i=0; i<numInstances; i++)
-
-					for (int x=0; x<width; x++)
-						for(int y=0; y<height; y++)
-						{
-							try{
-
-								if (0 == (x+y*width) % 4000)
-								{
-									if (Thread.currentThread().isInterrupted())
-										return null;
-									counter.addAndGet(4000);
-								}
-
-								sliceFeatures.setInstance(
-										x, y, 0, ins, values );
-
-								if (probabilityMaps)
-								{
-									double[] prob = classifier.distributionForInstance( ins );
-									for(int k = 0 ; k < numClasses; k++)
-									{
-										probArray[k][x+y*width] = prob[ k ];
-									}
-								}
-								else
-								{
-									probArray[0][ x+y*width ] = classifier.classifyInstance( ins );
-								}
-
-							}catch(Exception e){
-
-								IJ.showMessage("Could not apply Classifier!");
-								e.printStackTrace();
-								return null;
-							}
-						}
-
-					if( probabilityMaps )
-					{
-						for(int k = 0 ; k < numClasses; k++)
-							classificationResult.addSlice("class-" + (k+1), new FloatProcessor(width, height, probArray[k]) );
-					}
-					else
-						classificationResult.addSlice("result", new FloatProcessor(width, height, probArray[0]) );
-
-					result.add( new ImagePlus("classified-image-"+image.getTitle(), classificationResult) );
+					result.add(new ImagePlus("classified-image-" + image.getTitle(), classificationResult));
 				}
 				return result;
 			}
 		};
+	}
+
+	private ImageStack classifyImageHelper(ImagePlus image, Instances dataInfo, boolean probabilityMaps, AtomicInteger counter, AbstractClassifier classifier) {
+		final FeatureStack sliceFeatures = new FeatureStack( image );
+		// Use the same features as the current classifier
+		sliceFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());
+		sliceFeatures.setMaximumSigma(maximumSigma);
+		sliceFeatures.setMinimumSigma(minimumSigma);
+		sliceFeatures.setMembranePatchSize(membranePatchSize);
+		sliceFeatures.setMembraneSize(membraneThickness);
+		if(!sliceFeatures.updateFeaturesST())
+		{
+			IJ.log("Classifier execution was interrupted.");
+			return null;
+		}
+		filterFeatureStackByList(featureNames, sliceFeatures);
+
+		final int width = image.getWidth();
+		final int height = image.getHeight();
+		final int numClasses = dataInfo.numClasses();
+
+		ImageStack classificationResult = new ImageStack(width, height);
+
+		final int numInstances = width * height;
+
+		final double[][] probArray;
+
+		if (probabilityMaps)
+			probArray = new double[numClasses][numInstances];
+		else
+			probArray = new double[1][numInstances];
+
+		IJ.log("Classifying slice " + image.getTitle() + "...");
+
+		// auxiliary array to be filled for each instance
+		final int extra = sliceFeatures.useNeighborhood() ? 8 : 0;
+		final double[] values =
+				new double[ sliceFeatures.getSize() + 1 + extra ];
+		// create empty reusable instance
+		final ReusableDenseInstance ins =
+				new ReusableDenseInstance( 1.0, values );
+		ins.setDataset( dataInfo );
+
+		for (int x=0; x<width; x++)
+			for(int y=0; y<height; y++)
+			{
+				try{
+
+					if (0 == (x+y*width) % 4000)
+					{
+						if (Thread.currentThread().isInterrupted())
+							return null;
+						counter.addAndGet(4000);
+					}
+
+					sliceFeatures.setInstance( x, y, 0, ins, values );
+
+					if (probabilityMaps)
+					{
+						double[] prob = classifier.distributionForInstance( ins );
+						for(int k = 0 ; k < numClasses; k++)
+						{
+							probArray[k][x+y*width] = prob[ k ];
+						}
+					}
+					else
+					{
+						probArray[0][ x+y*width ] = classifier.classifyInstance( ins );
+					}
+
+				}catch(Exception e){
+
+					IJ.showMessage("Could not apply Classifier!");
+					e.printStackTrace();
+					return null;
+				}
+			}
+
+		if( probabilityMaps )
+		{
+			for(int k = 0 ; k < numClasses; k++)
+				classificationResult.addSlice("class-" + (k+1), new FloatProcessor(width, height, probArray[k]) );
+		}
+		else
+			classificationResult.addSlice("result", new FloatProcessor(width, height, probArray[0]) );
+		return classificationResult;
 	}
 
 	/**
