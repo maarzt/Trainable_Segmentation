@@ -1930,13 +1930,8 @@ public class WekaSegmentation {
 			// Make sure it's binary
 			labelIP.getProcessor().autoThreshold();
 
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor(i)));
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			featureStack.updateFeaturesMT();
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 
 			featureStack.setUseNeighbors(this.featureStackArray.useNeighborhood());
@@ -1981,13 +1976,8 @@ public class WekaSegmentation {
 			// Process label pixels
 			final ImagePlus labelIP = new ImagePlus ("labels", labelSlices.getProcessor(i).duplicate());
 
-			final FeatureStack featureStack = new FeatureStack( new ImagePlus( "slice " + i, inputSlices.getProcessor(i) ) );
-			featureStack.setEnabledFeatures( this.featureStackArray.getEnabledFeatures() );
-			featureStack.setMembranePatchSize( membranePatchSize );
-			featureStack.setMembraneSize( this.membraneThickness );
-			featureStack.setMaximumSigma( this.maximumSigma );
-			featureStack.setMinimumSigma( this.minimumSigma );
-			featureStack.updateFeaturesMT();
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList( this.featureNames, featureStack );
 
 			featureStack.setUseNeighbors( this.featureStackArray.useNeighborhood() );
@@ -2042,14 +2032,9 @@ public class WekaSegmentation {
 			// Make sure it's binary
 			labelIP.getProcessor().autoThreshold();
 
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor(i)));
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
@@ -2099,14 +2084,9 @@ public class WekaSegmentation {
 		for(int i=1; i <= inputSlices.getSize(); i++)
 		{
 			// Create feature stack for the slice
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor( i ) ) );
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
@@ -2120,6 +2100,17 @@ public class WekaSegmentation {
 			}
 		}
 		return true;
+	}
+
+	private FeatureStack generateFeatureStack(ImagePlus image) {
+		final FeatureStack featureStack = new FeatureStack(image);
+		featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
+		featureStack.setMembranePatchSize(membranePatchSize);
+		featureStack.setMembraneSize(this.membraneThickness);
+		featureStack.setMaximumSigma(this.maximumSigma);
+		featureStack.setMinimumSigma(this.minimumSigma);
+		featureStack.updateFeaturesMT();
+		return featureStack;
 	}
 
 	/**
@@ -2157,17 +2148,9 @@ public class WekaSegmentation {
 		for(int i=1; i <= inputSlices.getSize(); i++)
 		{
 			// Create feature stack for the slice
-			final FeatureStack featureStack =
-					new FeatureStack( new ImagePlus( "slice " + i,
-							inputSlices.getProcessor( i ) ) );
-			featureStack.setEnabledFeatures(
-					this.featureStackArray.getEnabledFeatures() );
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
@@ -2228,14 +2211,9 @@ public class WekaSegmentation {
 			// Make sure it's binary
 			labelIP.getProcessor().autoThreshold();
 
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor(i)));
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
@@ -2297,14 +2275,9 @@ public class WekaSegmentation {
 			// Make sure it's binary
 			labelIP.getProcessor().autoThreshold();
 
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor(i)));
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
@@ -2361,14 +2334,9 @@ public class WekaSegmentation {
 			// Make sure it's binary
 			labelIP.getProcessor().autoThreshold();
 
-			final FeatureStack featureStack = new FeatureStack(new ImagePlus("slice " + i, inputSlices.getProcessor(i)));
-			featureStack.setEnabledFeatures(this.featureStackArray.getEnabledFeatures());
-			featureStack.setMembranePatchSize(membranePatchSize);
-			featureStack.setMembraneSize(this.membraneThickness);
-			featureStack.setMaximumSigma(this.maximumSigma);
-			featureStack.setMinimumSigma(this.minimumSigma);
-			IJ.log("Creating feature stack for slice "+i+"...");
-			featureStack.updateFeaturesMT();
+			IJ.log("Creating feature stack for slice "+ i +"...");
+			ImagePlus image = new ImagePlus("slice " + i, inputSlices.getProcessor(i));
+			final FeatureStack featureStack = generateFeatureStack(image);
 			filterFeatureStackByList(this.featureNames, featureStack);
 			IJ.log("Feature stack is now updated.");
 
