@@ -26,6 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -2738,6 +2739,32 @@ public class WekaSegmentation {
 			int blackClassIndex,
 			boolean verbose)
 	{
+		return getTestErrorHelper(image, labels, whiteClassIndex, blackClassIndex,
+			verbose, this::generateTestImageFeatureStack);
+	}
+
+	private FeatureStack generateTestImageFeatureStack(ImagePlus testSlice) {
+		final FeatureStack testImageFeatures = new FeatureStack(testSlice);
+		// Use the same features as the current classifier
+		testImageFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());
+		testImageFeatures.setMaximumSigma(maximumSigma);
+		testImageFeatures.setMinimumSigma(minimumSigma);
+		testImageFeatures.setMembranePatchSize(membranePatchSize);
+		testImageFeatures.setMembraneSize(membraneThickness);
+		testImageFeatures.updateFeaturesMT();
+		testImageFeatures.setUseNeighbors(featureStackArray.useNeighborhood());
+		filterFeatureStackByList(this.featureNames, testImageFeatures);
+		return testImageFeatures;
+	}
+
+	private double getTestErrorHelper(
+			ImagePlus image,
+			ImagePlus labels,
+			int whiteClassIndex,
+			int blackClassIndex,
+			boolean verbose,
+			Function<ImagePlus, FeatureStack> featureStackGenerator)
+	{
 		IJ.showStatus("Creating features for test image...");
 		if(verbose)
 			IJ.log("Creating features for test image " + image.getTitle() +  "...");
@@ -2766,19 +2793,10 @@ public class WekaSegmentation {
 		{
 			final ImagePlus testSlice = new ImagePlus(image.getImageStack().getSliceLabel(z), image.getImageStack().getProcessor(z));
 			// Create feature stack for test image
-			IJ.showStatus("Creating features for test image (slice "+z+")...");
+			IJ.showStatus("Creating features for test image...");
 			if(verbose)
-				IJ.log("Creating features for test image (slice "+z+")...");
-			final FeatureStack testImageFeatures = new FeatureStack(testSlice);
-			// Use the same features as the current classifier
-			testImageFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());
-			testImageFeatures.setMaximumSigma(maximumSigma);
-			testImageFeatures.setMinimumSigma(minimumSigma);
-			testImageFeatures.setMembranePatchSize(membranePatchSize);
-			testImageFeatures.setMembraneSize(membraneThickness);
-			testImageFeatures.updateFeaturesMT();
-			testImageFeatures.setUseNeighbors(featureStackArray.useNeighborhood());
-			filterFeatureStackByList(this.featureNames, testImageFeatures);
+				IJ.log("Creating features for test image " + z +  "...");
+			final FeatureStack testImageFeatures = featureStackGenerator.apply(testSlice);
 
 			final Instances data = testImageFeatures.createInstances(classNames);
 			data.setClassIndex(data.numAttributes()-1);
@@ -2822,6 +2840,7 @@ public class WekaSegmentation {
 
 		return error;
 	}
+
 
 	/**
 	 * Get the confusion matrix for an input image and its expected labels
@@ -3055,84 +3074,16 @@ public class WekaSegmentation {
 			int blackClassIndex,
 			boolean verbose)
 	{
-		IJ.showStatus("Creating features for test image...");
-		if(verbose)
-			IJ.log("Creating features for test image " + image.getTitle() +  "...");
-
-
-		// Set proper class names (skip empty list ones)
-		ArrayList<String> classNames = new ArrayList<String>();
-		if( null == loadedClassNames )
-		{
-			for(int i = 0; i < numOfClasses; i++)
-				if(!examples[0].get(i).isEmpty())
-					classNames.add(getClassLabels()[i]);
-		}
-		else
-			classNames = loadedClassNames;
-
-
-		// Apply labels
-		final int height = image.getHeight();
-		final int width = image.getWidth();
-		final int depth = image.getStackSize();
-
-		Instances testData = null;
-
-		for(int z=1; z <= depth; z++)
-		{
-			final ImagePlus testSlice = new ImagePlus(image.getImageStack().getSliceLabel(z), image.getImageStack().getProcessor(z));
-			// Create feature stack for test image
-			IJ.showStatus("Creating features for test image...");
-			if(verbose)
-				IJ.log("Creating features for test image " + z +  "...");
-			final FeatureStack testImageFeatures = new FeatureStack(testSlice);
-			// Create features by applying the filters
-			testImageFeatures.addFeaturesMT(filters);
-
-			final Instances data = testImageFeatures.createInstances(classNames);
-			data.setClassIndex(data.numAttributes()-1);
-			if(verbose)
-				IJ.log("Assigning classes based on the labels...");
-
-			final ImageProcessor slice = labels.getImageStack().getProcessor(z);
-			for(int n=0, y=0; y<height; y++)
-				for(int x=0; x<width; x++, n++)
-				{
-					final double newValue = slice.getPixel(x, y) > 0 ? whiteClassIndex : blackClassIndex;
-					data.get(n).setClassValue(newValue);
-				}
-
-			if(null == testData)
-				testData = data;
-			else
-			{
-				for(int i=0; i<data.numInstances(); i++)
-					testData.add( data.get(i) );
-			}
-		}
-		if(verbose)
-			IJ.log("Evaluating test data...");
-
-		double error = -1;
-		try {
-			final Evaluation evaluation = new Evaluation(testData);
-			evaluation.evaluateModel(classifier, testData);
-			if(verbose)
-			{
-				IJ.log(evaluation.toSummaryString("\n=== Test data evaluation ===\n", false));
-				IJ.log(evaluation.toClassDetailsString() + "\n");
-				IJ.log(evaluation.toMatrixString());
-			}
-			error = evaluation.errorRate();
-		} catch (Exception e) {
-
-			e.printStackTrace();
-		}
-
-		return error;
+		return getTestErrorHelper(image, labels, whiteClassIndex, blackClassIndex,
+			verbose, img -> generateTestImageFeatureStack(filters, img));
 	}
 
+	private FeatureStack generateTestImageFeatureStack(ImagePlus filters, ImagePlus testSlice) {
+		final FeatureStack testImageFeatures = new FeatureStack(testSlice);
+		// Create features by applying the filters
+		testImageFeatures.addFeaturesMT(filters);
+		return testImageFeatures;
+	}
 
 	/**
 	 * Update the class attribute of "loadedTrainingData" from
