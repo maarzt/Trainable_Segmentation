@@ -6,11 +6,9 @@ import static org.junit.Assume.assumeNotNull;
 import hr.irb.fastRandomForest.FastRandomForest;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.Roi;
 import ij.process.ByteProcessor;
 import ij.process.ImageConverter;
-import ij.process.ImageProcessor;
 
 import java.net.URL;
 import java.util.function.Consumer;
@@ -51,13 +49,13 @@ public class BasicTest
 
 	@Test
 	public void bridge() {
-		final ImagePlus bridge = loadFromResource( "/bridge.png" );
+		final ImagePlus bridge = Utils.loadImagePlusFromResource( "/bridge.png" );
 		assumeNotNull( bridge );
-		final ImagePlus bridgeExpect = loadFromResource( "/bridge-expected.png" );
+		final ImagePlus bridgeExpect = Utils.loadImagePlusFromResource( "/bridge-expected.png" );
 		assumeNotNull( bridgeExpect );
 
 		ImagePlus output = segmentBridge(bridge);
-		assertEquals(0, diffImagePlus(output, bridgeExpect));
+		Utils.assertImagesEqual(bridgeExpect, output);
 	}
 
 	@Test
@@ -72,14 +70,14 @@ public class BasicTest
 
 	private void testDefaultFeaturesOnBridge(Consumer<FeatureStack> updateFeaturesMethod) {
 		// setup
-		final ImagePlus bridge = loadFromResource("/bridge.png");
+		final ImagePlus bridge = Utils.loadImagePlusFromResource("/bridge.png");
 		// process
 		final FeatureStack featureStack = new FeatureStack(bridge);
 		updateFeaturesMethod.accept(featureStack);
 		final ImagePlus features = new ImagePlus("features", featureStack.getStack());
 		// test
-		final ImagePlus expected = loadFromResource("/features-expected.tiff");
-		assertEquals(0, diffImagePlus(expected, features));
+		final ImagePlus expected = Utils.loadImagePlusFromResource("/features-expected.tiff");
+		Utils.assertImagesEqual(expected, features);
 	}
 
 	private ImagePlus makeTestImage(final String title, final int width, final int height, final int... pixels)
@@ -104,38 +102,6 @@ public class BasicTest
 		ImagePlus output = segmentator.getClassifiedImage();
 		new ImageConverter( output ).convertToGray8();
 		return output;
-	}
-
-	private ImagePlus loadFromResource(final String path) {
-		final URL url = getClass().getResource(path);
-		if (url == null) return null;
-		if ("file".equals(url.getProtocol())) return new ImagePlus(url.getPath());
-		return new ImagePlus(url.toString());
-	}
-
-	private int diffImagePlus(final ImagePlus a, final ImagePlus b) {
-		final int[] dimsA = a.getDimensions(), dimsB = b.getDimensions();
-		if (dimsA.length != dimsB.length) return dimsA.length - dimsB.length;
-		for (int i = 0; i < dimsA.length; i++) {
-			if (dimsA[i] != dimsB[i]) return dimsA[i] - dimsB[i];
-		}
-		int count = 0;
-		final ImageStack stackA = a.getStack(), stackB = b.getStack();
-		for (int slice = 1; slice <= stackA.getSize(); slice++) {
-			count += diff( stackA.getProcessor( slice ), stackB.getProcessor( slice ) );
-		}
-		return count;
-	}
-
-	private int diff(final ImageProcessor a, final ImageProcessor b) {
-		int count = 0;
-		final int width = a.getWidth(), height = a.getHeight();
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				if (a.getf(x, y) != b.getf(x, y)) count++;
-			}
-		}
-		return count;
 	}
 
 	public static void main(String...strings) {
