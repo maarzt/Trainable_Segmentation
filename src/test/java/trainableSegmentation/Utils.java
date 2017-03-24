@@ -1,10 +1,20 @@
 package trainableSegmentation;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
+import net.imglib2.Cursor;
+import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.type.Type;
+import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.util.Intervals;
 
 import java.net.URL;
+import java.util.NoSuchElementException;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -31,6 +41,24 @@ public class Utils {
 		return count;
 	}
 
+	public static < T extends Type< T >> boolean equals(final RandomAccessibleInterval< T > a,
+		final IterableInterval< T > b)
+    {
+    	if(!Intervals.equals(a, b))
+    		return false;
+        // create a cursor that automatically localizes itself on every move
+        Cursor< T > bCursor = b.localizingCursor();
+        RandomAccess< T > aRandomAccess = a.randomAccess();
+        while ( bCursor.hasNext())
+        {
+            bCursor.fwd();
+            aRandomAccess.setPosition(bCursor);
+            if( ! bCursor.get().equals( aRandomAccess.get() ))
+            	return false;
+        }
+        return true;
+    }
+
 	private static int diff(final ImageProcessor a, final ImageProcessor b) {
 		int count = 0;
 		final int width = a.getWidth(), height = a.getHeight();
@@ -43,10 +71,19 @@ public class Utils {
 	}
 
 	public static ImagePlus loadImagePlusFromResource(final String path) {
-		final URL url = Utils.class.getResource(path);
-		if (url == null) return null;
+		final URL url = Utils.class.getResource("/" + path);
+		if(url == null)
+			throw new NoSuchElementException("file: " + path);
 		if ("file".equals(url.getProtocol())) return new ImagePlus(url.getPath());
 		return new ImagePlus(url.toString());
 	}
 
+	public static void saveImageToResouce(final ImagePlus image, final String path) {
+		final URL url = Utils.class.getResource(path);
+		IJ.save(image, url.getPath());
+	}
+
+	public static void assertImagesEqual(Img<IntType> expectedImage, Img<IntType> resultImage) {
+		assertTrue(equals(expectedImage, resultImage));
+	}
 }

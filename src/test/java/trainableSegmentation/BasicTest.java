@@ -49,9 +49,9 @@ public class BasicTest
 
 	@Test
 	public void bridge() {
-		final ImagePlus bridge = Utils.loadImagePlusFromResource( "/bridge.png" );
+		final ImagePlus bridge = Utils.loadImagePlusFromResource( "bridge.png" );
 		assumeNotNull( bridge );
-		final ImagePlus bridgeExpect = Utils.loadImagePlusFromResource( "/bridge-expected.png" );
+		final ImagePlus bridgeExpect = Utils.loadImagePlusFromResource( "bridge-expected.png" );
 		assumeNotNull( bridgeExpect );
 
 		ImagePlus output = segmentBridge(bridge);
