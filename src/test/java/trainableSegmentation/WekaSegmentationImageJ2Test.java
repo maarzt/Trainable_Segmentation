@@ -46,9 +46,9 @@ public class WekaSegmentationImageJ2Test {
 		ImgLabeling<String, IntType> labeling = getBridgeLabeling();
 		Classifier classifier = Classifier.train(image, labeling);
 		Img<IntType> resultImage = classifier.apply(image);
-		IterableInterval<UnsignedByteType> expectedImage = ImagePlusAdapter.wrapByte(loadImage("bridge-expected.png"));
-		IterableInterval<IntType> eI = Converters.convert(expectedImage, (b, i) -> i.set(b.get()), new IntType());
-		Utils.assertImagesEqual(resultImage, eI);
+		RandomAccessibleInterval<UnsignedByteType> expectedImage = ImagePlusAdapter.wrapByte(loadImage("bridge-expected.png"));
+		RandomAccessibleInterval<IntType> eI = Converters.convert(expectedImage, (b, i) -> i.set(b.get()), new IntType());
+		Utils.assertImagesEqual(eI, resultImage);
 	}
 
 	public static void main(String... args) {
