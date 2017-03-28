@@ -4,6 +4,7 @@ import hr.irb.fastRandomForest.FastRandomForest;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ImageConverter;
+import net.imglib2.img.Img;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.type.numeric.integer.IntType;
 
@@ -18,10 +19,8 @@ public class Classifier {
 		this.wekaSegmentation = wekaSegmentation;
 	}
 
-	public ImagePlus apply(ImagePlus image) {
-		ImagePlus output = wekaSegmentation.applyClassifier(image);
-		new ImageConverter(output).convertToGray8();
-		return output;
+	public Img<IntType> apply(ImagePlus image) {
+		return wekaSegmentation.applyClassifier(image);
 	}
 
 	public static Classifier train(ImagePlus image, ImgLabeling<String, IntType> labeling) {

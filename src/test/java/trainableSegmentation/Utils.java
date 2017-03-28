@@ -4,18 +4,23 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
+import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.Type;
+import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.Unsigned2BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.util.Intervals;
 
 import java.net.URL;
 import java.util.NoSuchElementException;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 /**
@@ -41,14 +46,15 @@ public class Utils {
 		return count;
 	}
 
-	public static < T extends Type< T >> boolean equals(final RandomAccessibleInterval< T > a,
+	public static < T extends Type< T >> boolean equals(final RandomAccessibleInterval< ? > a,
 		final IterableInterval< T > b)
     {
     	if(!Intervals.equals(a, b))
     		return false;
         // create a cursor that automatically localizes itself on every move
+		System.out.println("check picture content.");
         Cursor< T > bCursor = b.localizingCursor();
-        RandomAccess< T > aRandomAccess = a.randomAccess();
+        RandomAccess< ? > aRandomAccess = a.randomAccess();
         while ( bCursor.hasNext())
         {
             bCursor.fwd();
@@ -83,7 +89,27 @@ public class Utils {
 		IJ.save(image, url.getPath());
 	}
 
-	public static void assertImagesEqual(Img<IntType> expectedImage, Img<IntType> resultImage) {
-		assertTrue(equals(expectedImage, resultImage));
+	public static <A extends IntegerType<A>, B extends IntegerType<B>>
+		void assertImagesEqual(final RandomAccessibleInterval< A > a, final IterableInterval< B > b) {
+		assertTrue(Intervals.equals(a, b));
+		// create a cursor that automatically localizes itself on every move
+		System.out.println("check picture content.");
+		Cursor< B > bCursor = b.localizingCursor();
+		RandomAccess< A > aRandomAccess = a.randomAccess();
+		while ( bCursor.hasNext())
+		{
+			bCursor.fwd();
+			aRandomAccess.setPosition(bCursor);
+			assertEquals( aRandomAccess.get().getInteger(), bCursor.get().getInteger());
+		}
 	}
+
+	public static void showDifference(IterableInterval<IntType> resultImage, IterableInterval<IntType> expectedImage) {
+		ImageJ imageJ = new ImageJ();
+		IterableInterval<IntType> difference = imageJ.op().copy().iterableInterval(expectedImage);
+		imageJ.op().math().subtract(difference, expectedImage, resultImage);
+		imageJ.ui().showUI();
+		imageJ.ui().show(difference);
+	}
+
 }
