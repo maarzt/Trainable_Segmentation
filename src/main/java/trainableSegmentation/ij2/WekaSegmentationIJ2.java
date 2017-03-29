@@ -41,9 +41,7 @@ import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
 import trainableSegmentation.FeatureStack;
-import trainableSegmentation.FeatureStack3D;
 import trainableSegmentation.FeatureStackArray;
-import trainableSegmentation.WekaSegmentation;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.Instance;
@@ -65,19 +63,13 @@ public class WekaSegmentationIJ2 {
 	 * and each class (arraylist index) of the training image */
 	/** image to be used in the training */
 	private ImagePlus trainingImage;
-	/** result image after classification */
-	private ImagePlus classifiedImage;
 	/** features to be used in the training */
 	private FeatureStackArray featureStackArray = null;
 
 	/** set of instances from loaded data (previously saved segmentation) */
 	private Instances loadedTrainingData = null;
-	/** set of instances from the user's traces */
-	private Instances traceTrainingData = null;
 	/** current classifier */
 	private AbstractClassifier classifier = null;
-	/** train header */
-	private Instances trainHeader = null;
 
 	/** default classifier (Fast Random Forest) */
 	private FastRandomForest rf;
@@ -101,8 +93,6 @@ public class WekaSegmentationIJ2 {
 	private int numOfTrees = 200;
 	/** current number of random features per tree in the fast random forest classifier */
 	private int randomFeatures = 2;
-	/** maximum depth per tree in the fast random forest classifier */
-	private int maxDepth = 0;
 	/** list of class names on the loaded data */
 	private ArrayList<String> loadedClassNames = null;
 
@@ -117,7 +107,6 @@ public class WekaSegmentationIJ2 {
 	private float maximumSigma = 16f;
 
 	private boolean isProcessing3D = false;
-	private FeatureStack3D fs3d = null;
 
 	/** flags of filters to be used in 2D */
 	private boolean[] enabledFeatures = new boolean[]{
@@ -154,9 +143,6 @@ public class WekaSegmentationIJ2 {
 	 * the same number of instances per class (class balance)
 	 * */
 	private boolean balanceClasses = false;
-
-	/** executor service to launch threads for the library operations */
-	private ExecutorService exe = Executors.newFixedThreadPool(  Prefs.getThreads() );
 
 	/**
 	 * Default constructor.
@@ -272,18 +258,6 @@ public class WekaSegmentationIJ2 {
 	 */
 	public AbstractClassifier getClassifier() {
 		return classifier;
-	}
-
-	/**
-	 * Homogenize number of instances per class
-	 *
-	 * @param data input set of instances
-	 * @return resampled set of instances
-	 * @deprecated use balanceTrainingData
-	 */
-	public static Instances homogenizeTrainingData(Instances data)
-	{
-		return WekaSegmentation.balanceTrainingData( data );
 	}
 
 	/**
@@ -514,13 +488,10 @@ public class WekaSegmentationIJ2 {
 		Instances data = null;
 		{
 			final long start = System.currentTimeMillis();
-			traceTrainingData = data = createTrainingInstances(labeling);
+			data = createTrainingInstances(labeling);
 			final long end = System.currentTimeMillis();
 			IJ.log("Creating training data took: " + (end-start) + "ms");
 		}
-
-		// Update train header
-		this.trainHeader = new Instances(data, 0);
 
 		// Resample data if necessary
 		if(balanceClasses)
