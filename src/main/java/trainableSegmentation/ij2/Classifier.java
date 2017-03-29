@@ -3,7 +3,7 @@ package trainableSegmentation.ij2;
 import hr.irb.fastRandomForest.FastRandomForest;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import net.imglib2.img.Img;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.type.numeric.integer.IntType;
 
@@ -18,7 +18,7 @@ public class Classifier {
 		this.wekaSegmentation = wekaSegmentation;
 	}
 
-	public Img<IntType> apply(ImagePlus image) {
+	public RandomAccessibleInterval<IntType> apply(ImagePlus image) {
 		return wekaSegmentation.applyClassifier(image);
 	}
 

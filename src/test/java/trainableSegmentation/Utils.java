@@ -90,17 +90,17 @@ public class Utils {
 	}
 
 	public static <A extends IntegerType<A>, B extends IntegerType<B>>
-		void assertImagesEqual(final RandomAccessibleInterval< A > a, final IterableInterval< B > b) {
+		void assertImagesEqual(final IterableInterval<A> a, final RandomAccessibleInterval<B> b) {
 		assertTrue(Intervals.equals(a, b));
 		// create a cursor that automatically localizes itself on every move
 		System.out.println("check picture content.");
-		Cursor< B > bCursor = b.localizingCursor();
-		RandomAccess< A > aRandomAccess = a.randomAccess();
-		while ( bCursor.hasNext())
+		Cursor< A > aCursor = a.localizingCursor();
+		RandomAccess< B > bRandomAccess = b.randomAccess();
+		while ( aCursor.hasNext())
 		{
-			bCursor.fwd();
-			aRandomAccess.setPosition(bCursor);
-			assertEquals( aRandomAccess.get().getInteger(), bCursor.get().getInteger());
+			aCursor.fwd();
+			bRandomAccess.setPosition(aCursor);
+			assertEquals( bRandomAccess.get().getInteger(), aCursor.get().getInteger());
 		}
 	}
 

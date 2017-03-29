@@ -1,12 +1,14 @@
 package trainableSegmentation;
 
 import ij.ImagePlus;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.numeric.integer.IntType;
@@ -38,19 +40,24 @@ public class WekaSegmentationImageJ2Test {
 		ImagePlus image = loadImage("bridge.png");
 		ImgLabeling<String, IntType> labeling = getBridgeLabeling();
 		Classifier classifier = Classifier.train(image, labeling);
-		Img<IntType> resultImage = classifier.apply(image);
-		RandomAccessibleInterval<UnsignedByteType> expectedImage = ImagePlusAdapter.wrapByte(loadImage("bridge-expected.png"));
-		RandomAccessibleInterval<IntType> eI = Converters.convert(expectedImage, (b, i) -> i.set(b.get()), new IntType());
-		Utils.assertImagesEqual(eI, resultImage);
+		RandomAccessibleInterval<IntType> resultImage = classifier.apply(image);
+		IterableInterval<IntType> expectedImage = loadImageIntType("bridge-expected.png");
+		ImageJFunctions.show(resultImage);
+		Utils.assertImagesEqual(expectedImage, resultImage);
 	}
+
 
 	public static void main(String... args) {
 		new WekaSegmentationImageJ2Test().testClassification();
 	}
 
+	private IterableInterval<IntType> loadImageIntType(String s) {
+		IterableInterval<UnsignedByteType> expectedImage = ImagePlusAdapter.wrapByte(loadImage(s));
+		return Converters.convert(expectedImage, (b, i) -> i.set(b.get()), new IntType());
+	}
+
 	private static ImagePlus loadImage(String s) {
 		return Utils.loadImagePlusFromResource(s);
 	}
-
 
 }

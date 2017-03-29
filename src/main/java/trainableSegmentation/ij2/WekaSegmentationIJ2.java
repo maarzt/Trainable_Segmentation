@@ -22,14 +22,9 @@
 package trainableSegmentation.ij2;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import net.imagej.ops.OpService;
 import net.imglib2.*;
-import net.imglib2.RandomAccess;
-import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
 import net.imglib2.roi.labeling.LabelRegions;
@@ -40,15 +35,14 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
-import trainableSegmentation.FeatureStack;
-import trainableSegmentation.FeatureStackArray;
+import org.scijava.Context;
+import trainableSegmentation.weka.Predict;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
-
 
 /**
  * This class contains all the library methods to perform image segmentation
@@ -548,7 +542,7 @@ public class WekaSegmentationIJ2 {
 	 * @param imp image (2D single image or stack)
 	 * @return result image (classification)
 	 */
-	public Img<IntType> applyClassifier(final ImagePlus imp)
+	public RandomAccessibleInterval<IntType> applyClassifier(final ImagePlus imp)
 	{
 		return applyClassifier(imp, 0, false);
 	}
@@ -567,7 +561,7 @@ public class WekaSegmentationIJ2 {
 	 * a classification
 	 * @return result image
 	 */
-	public Img<IntType> applyClassifier(
+	public RandomAccessibleInterval<IntType> applyClassifier(
 			final ImagePlus imp,
 			int numThreads,
 			final boolean probabilityMaps)
@@ -578,7 +572,7 @@ public class WekaSegmentationIJ2 {
 
 		assert imp.getStackSize() == 1;
 
-		final List<Img<IntType>> classifiedSlices = new ArrayList<>();
+		final List<RandomAccessibleInterval<IntType>> classifiedSlices = new ArrayList<>();
 
 		IJ.log("Starting thread " + 0 + " processing " + imp.getImageStackSize() + " slices, starting with " + 1);
 
@@ -586,7 +580,7 @@ public class WekaSegmentationIJ2 {
 		{
 			final ImagePlus slice = new ImagePlus(imp.getImageStack().getSliceLabel(i), imp.getImageStack().getProcessor(i));
 			// Create feature stack for slice
-			final Img<IntType> classImage = applyClassifierToSlice(i, slice);
+			final RandomAccessibleInterval<IntType> classImage = applyClassifierToSlice(i, slice);
 			classifiedSlices.add(classImage);
 		}
 
@@ -594,29 +588,17 @@ public class WekaSegmentationIJ2 {
 
 	}
 
-	private Img<IntType> applyClassifierToSlice(int i, ImagePlus slice) {
+	private RandomAccessibleInterval<IntType> applyClassifierToSlice(int i, ImagePlus slice) {
 		IJ.showStatus("Creating features...");
 		IJ.log("Creating features for slice " + i +  "...");
 		final FeatureStack sliceFeatures = generateFeatureStack(slice);
 		ArrayList<String> classNames = getClassNames();
+		RandomAccessibleInterval<Instance> instanceView = sliceFeatures.createInstanceView(classNames);
 		final Instances emptyDataset = sliceFeatures.createEmptyInstances(classNames);
 
 		IJ.log("Classifying slice " + i + " in " + 1 + " thread(s)...");
-		int w = slice.getWidth();
-		int h = slice.getHeight();
 		try {
-			final ImgFactory<IntType> imgFactory = new ArrayImgFactory<>();
-			final Img<IntType> img = imgFactory.create(new long[]{w, h}, new IntType());
-			RandomAccess<IntType> randomAccess = img.randomAccess();
-			for(int x = 0; x < w; x++) {
-				for(int y = 0; y < h; y++) {
-					randomAccess.setPosition( new long[]{ x, y } );
-					Instance instance = sliceFeatures.createInstance(x, y, 0);
-					instance.setDataset(emptyDataset);
-					randomAccess.get().set((int) (classifier.classifyInstance(instance) * 255));
-				}
-			}
-			return img;
+			return Predict.classify(instanceView, classifier);
 		}
 		catch (Exception e) {
 			IJ.showMessage("Could not apply Classifier!");
