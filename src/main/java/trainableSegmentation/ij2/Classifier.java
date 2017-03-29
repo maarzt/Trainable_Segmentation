@@ -1,9 +1,8 @@
-package trainableSegmentation;
+package trainableSegmentation.ij2;
 
 import hr.irb.fastRandomForest.FastRandomForest;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.process.ImageConverter;
 import net.imglib2.img.Img;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.type.numeric.integer.IntType;

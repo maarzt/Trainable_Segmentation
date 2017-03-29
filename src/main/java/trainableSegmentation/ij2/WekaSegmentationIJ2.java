@@ -19,7 +19,7 @@
  *          Albert Cardona (acardona@ini.phys.ethz.ch)
  */
 
-package trainableSegmentation;
+package trainableSegmentation.ij2;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +40,10 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
 import ij.gui.Roi;
+import trainableSegmentation.FeatureStack;
+import trainableSegmentation.FeatureStack3D;
+import trainableSegmentation.FeatureStackArray;
+import trainableSegmentation.WekaSegmentation;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
 import weka.core.Instance;

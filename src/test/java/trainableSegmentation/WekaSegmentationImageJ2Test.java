@@ -1,27 +1,20 @@
 package trainableSegmentation;
 
-import ij.IJ;
-import net.imagej.ImageJ;
 import ij.ImagePlus;
-import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.img.imageplus.ByteImagePlus;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelingType;
-import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
-import org.junit.Test;
 import org.scijava.Context;
 import org.scijava.convert.ConvertService;
+import trainableSegmentation.ij2.Classifier;
 
 /**
  * @author Matthias Arzt
