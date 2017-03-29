@@ -22,10 +22,8 @@
 package trainableSegmentation;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import net.imglib2.*;
 import net.imglib2.RandomAccess;
@@ -44,6 +42,7 @@ import ij.Prefs;
 import ij.gui.Roi;
 import weka.classifiers.AbstractClassifier;
 import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.instance.Resample;
@@ -601,7 +600,6 @@ public class WekaSegmentationIJ2 {
 		final int numChannels     = 1;
 
 		IJ.log("Processing slices of " + imp.getTitle() + " in " + 1 + " thread(s)...");
-		ArrayList<String> classNames = getClassNames();
 
 		assert imp.getStackSize() == 1;
 
@@ -613,19 +611,44 @@ public class WekaSegmentationIJ2 {
 		{
 			final ImagePlus slice = new ImagePlus(imp.getImageStack().getSliceLabel(i), imp.getImageStack().getProcessor(i));
 			// Create feature stack for slice
-			IJ.showStatus("Creating features...");
-			IJ.log("Creating features for slice " + i +  "...");
-			final FeatureStack sliceFeatures = generateFeatureStack(slice);
-			final Instances sliceData = sliceFeatures.createInstances(classNames);
-
-			IJ.log("Classifying slice " + i + " in " + 1 + " thread(s)...");
-			final Img<IntType> classImage = applyClassifier(sliceData, slice.getWidth(), slice.getHeight());
+			final Img<IntType> classImage = applyClassifierToSlice(i, slice);
 			classifiedSlices.add(classImage);
 		}
 
 		return classifiedSlices.get(0); // TODO create an image containing all the slices in the list
 
 	}
+
+	private Img<IntType> applyClassifierToSlice(int i, ImagePlus slice) {
+		IJ.showStatus("Creating features...");
+		IJ.log("Creating features for slice " + i +  "...");
+		final FeatureStack sliceFeatures = generateFeatureStack(slice);
+		ArrayList<String> classNames = getClassNames();
+		final Instances emptyDataset = sliceFeatures.createEmptyInstances(classNames);
+
+		IJ.log("Classifying slice " + i + " in " + 1 + " thread(s)...");
+		int w = slice.getWidth();
+		int h = slice.getHeight();
+		try {
+			final ImgFactory<IntType> imgFactory = new ArrayImgFactory<>();
+			final Img<IntType> img = imgFactory.create(new long[]{w, h}, new IntType());
+			RandomAccess<IntType> randomAccess = img.randomAccess();
+			for(int x = 0; x < w; x++) {
+				for(int y = 0; y < h; y++) {
+					randomAccess.setPosition( new long[]{ x, y } );
+					Instance instance = sliceFeatures.createInstance(x, y, 0);
+					instance.setDataset(emptyDataset);
+					randomAccess.get().set((int) (classifier.classifyInstance(instance) * 255));
+				}
+			}
+			return img;
+		}
+		catch (Exception e) {
+			IJ.showMessage("Could not apply Classifier!");
+			return null;
+		}
+	}
+
 	// Set proper class names (skip empty list ones)
 	ArrayList<String> classNames = new ArrayList<String>();
 	private FeatureStack generateFeatureStack(ImagePlus slice) {
@@ -655,33 +678,6 @@ public class WekaSegmentationIJ2 {
 		else
 			classNames = loadedClassNames;
 		return classNames;
-	}
-
-	/**
-	 * Apply current classifier to set of instances
-	 * @param data set of instances
-	 * @param w image width
-	 * @param h image height
-	 * @return result image
-	 */
-	public Img<IntType> applyClassifier(final Instances data, int w, int h)
-	{
-		try {
-			final ImgFactory<IntType> imgFactory = new ArrayImgFactory<>();
-			final Img<IntType> img = imgFactory.create(new long[]{w, h}, new IntType());
-			RandomAccess<IntType> randomAccess = img.randomAccess();
-			for(int x = 0; x < w; x++) {
-				for(int y = 0; y < h; y++) {
-					randomAccess.setPosition( new long[]{ x, y } );
-					randomAccess.get().set((int) (classifier.classifyInstance(data.get(w*y + x)) * 255));
-				}
-			}
-			return img;
-		}
-		catch (Exception e) {
-			IJ.showMessage("Could not apply Classifier!");
-			return null;
-		}
 	}
 
 	/**

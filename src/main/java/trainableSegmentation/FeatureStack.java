@@ -2153,27 +2153,9 @@ public class FeatureStack
 	{
 		if (Thread.currentThread().isInterrupted()) 
 			return null;
-		
-		if( oldColorFormat ) 
-			IJ.log( "Using old color format...");
-		
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		for (int i=1; i<=wholeStack.getSize(); i++){
-			String attString = wholeStack.getSliceLabel(i);
-			attributes.add(new Attribute(attString));
-		}
-		
-		if(useNeighborhood())
-			for (int i=0; i<8; i++)
-			{	
-				IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
-				attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
-			}
-		
-		attributes.add(new Attribute("class", classes));
-		
-		Instances data =  new Instances("segment", attributes, width*height);
-				
+
+		Instances data = createEmptyInstances(classes);
+
 		for (int y=0; y<wholeStack.getHeight(); y++)
 		{
 			if (Thread.currentThread().isInterrupted()) 
@@ -2185,11 +2167,34 @@ public class FeatureStack
 			}
 		}
 		// Set the index of the class attribute
-		data.setClassIndex( attributes.size() - 1 );
 		IJ.showProgress(1.0);
 		return data;
 	}
-	
+
+	public Instances createEmptyInstances(ArrayList<String> classes) {
+		if( oldColorFormat )
+			IJ.log( "Using old color format...");
+
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+		for (int i=1; i<=wholeStack.getSize(); i++){
+			String attString = wholeStack.getSliceLabel(i);
+			attributes.add(new Attribute(attString));
+		}
+
+		if(useNeighborhood())
+			for (int i=0; i<8; i++)
+			{
+				IJ.log("Adding extra attribute original_neighbor_" + (i+1) + "...");
+				attributes.add(new Attribute(new String("original_neighbor_" + (i+1))));
+			}
+
+		attributes.add(new Attribute("class", classes));
+
+		Instances data =  new Instances("segment", attributes, width*height);
+		data.setClassIndex( attributes.size() - 1 );
+		return data;
+	}
+
 	/**
 	 * Add the default features to the feature stack
 	 */
