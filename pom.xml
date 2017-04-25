@@ -130,6 +130,7 @@
 	</ciManagement>
 
 	<properties>
+		<enforcer.skip>true</enforcer.skip>
 		<package-name>ai</package-name>
 		<license.licenseName>gpl_v3</license.licenseName>
 		<license.copyrightOwners>Fiji developers.</license.copyrightOwners>
