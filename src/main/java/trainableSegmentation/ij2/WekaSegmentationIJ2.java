@@ -608,7 +608,7 @@ public class WekaSegmentationIJ2 {
 
 	// Set proper class names (skip empty list ones)
 	ArrayList<String> classNames = new ArrayList<String>();
-	private FeatureStack generateFeatureStack(ImagePlus slice) {
+	FeatureStack generateFeatureStack(ImagePlus slice) {
 		final FeatureStack sliceFeatures = new FeatureStack(slice);
 		// Use the same features as the current classifier
 		sliceFeatures.setEnabledFeatures(featureStackArray.getEnabledFeatures());

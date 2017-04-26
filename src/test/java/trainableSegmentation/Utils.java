@@ -9,13 +9,16 @@ import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
+import net.imglib2.converter.Converters;
+import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.Unsigned2BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
+import net.imglib2.util.Pair;
+import net.imglib2.view.Views;
 
 import java.net.URL;
 import java.util.NoSuchElementException;
@@ -92,7 +95,6 @@ public class Utils {
 	public static <A extends IntegerType<A>, B extends IntegerType<B>>
 		void assertImagesEqual(final IterableInterval<A> a, final RandomAccessibleInterval<B> b) {
 		assertTrue(Intervals.equals(a, b));
-		// create a cursor that automatically localizes itself on every move
 		System.out.println("check picture content.");
 		Cursor< A > aCursor = a.localizingCursor();
 		RandomAccess< B > bRandomAccess = b.randomAccess();
@@ -104,6 +106,14 @@ public class Utils {
 		}
 	}
 
+	public static <A extends Type<A>>
+	void assertImagesEqual(final RandomAccessibleInterval<A> a, final RandomAccessibleInterval<A> b) {
+		assertTrue(Intervals.equals(a, b));
+		System.out.println("check picture content.");
+		for(Pair<A,A> p : Views.interval(Views.pair(a, b), b))
+			assertTrue(p.getA().valueEquals(p.getB()));
+	}
+
 	public static void showDifference(IterableInterval<IntType> resultImage, IterableInterval<IntType> expectedImage) {
 		ImageJ imageJ = new ImageJ();
 		IterableInterval<IntType> difference = imageJ.op().copy().iterableInterval(expectedImage);
@@ -111,5 +121,19 @@ public class Utils {
 		imageJ.ui().showUI();
 		imageJ.ui().show(difference);
 	}
+
+	public static IterableInterval<IntType> loadImageIntType(String s) {
+		IterableInterval<UnsignedByteType> img = ImagePlusAdapter.wrapByte(loadImage(s));
+		return Converters.convert(img, (b, i) -> i.set(b.get()), new IntType());
+	}
+
+	public static RandomAccessibleInterval<FloatType> loadImageFloatType(String s) {
+		return ImagePlusAdapter.wrapFloat(loadImage(s));
+	}
+
+	public static ImagePlus loadImage(String s) {
+		return Utils.loadImagePlusFromResource(s);
+	}
+
 
 }

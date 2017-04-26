@@ -1782,7 +1782,7 @@ public class FeatureStack
 
 					}
 					
-					// Normalize filtered stack (it seems necessary to have proper results)					
+					// Normalize filtered stack (it seems necessary to have proper results)
 					final ImagePlus projectStack = new ImagePlus("filtered stack", Utils.normalize( is ));
 
 					final ImageStack resultStack = new ImageStack(width, height);
@@ -2625,6 +2625,7 @@ public class FeatureStack
 						return false;
 
 					addAnisotropicDiffusion(originalImage, 20, 20,(int) i, j, 0.9f, (float) membraneSize)  ;
+					// well known in science
 				}
 		}				
 
@@ -3306,14 +3307,18 @@ public class FeatureStack
 	}
 
 	public RandomAccessibleInterval<Instance> createInstanceView(ArrayList<String> classes) {
-		ImagePlus imagePlus = new ImagePlus("stack", wholeStack);
-		final RandomAccessibleInterval< FloatType > feats = ImageJFunctions.wrapFloat( imagePlus );
+		final RandomAccessibleInterval<FloatType> feats = asRandomAccessibleInterval();
 		final RandomAccessibleInterval<RealComposite< FloatType >> img = Views.collapseReal( feats );
 		ArrayList<Attribute> attributes = createAttributes(classes);
 		RandomAccessible<Instance> instanceView = new InstanceView<FloatType>(img, attributes.toArray(new Attribute[]{}));
 		return Views.interval(instanceView, (Interval) img);
 	}
-	
+
+	public RandomAccessibleInterval<FloatType> asRandomAccessibleInterval() {
+		ImagePlus imagePlus = new ImagePlus("stack", wholeStack);
+		return ImageJFunctions.wrapFloat( imagePlus );
+	}
+
 	/**
 	 * Get pixel value from an ImageProcessor with mirror boundary conditions
 	 * @param ip input image

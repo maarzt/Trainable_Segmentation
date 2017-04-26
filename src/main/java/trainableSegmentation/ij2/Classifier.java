@@ -24,9 +24,7 @@ public class Classifier {
 
 	public static Classifier train(ImagePlus image, ImgLabeling<String, IntType> labeling) {
 		WekaSegmentationIJ2 segmentator = new WekaSegmentationIJ2( image );
-		segmentator.addExample( 0, new Roi( 10, 10, 50, 50 ), 1 );
-		segmentator.addExample( 1, new Roi( 400, 400, 30, 30 ), 1 );
-
+		segmentator.addExample( 0, null, 1 );
 		FastRandomForest rf = (FastRandomForest) segmentator.getClassifier();
 		rf.setSeed( 69 );
 		if(! segmentator.trainClassifier(labeling) )

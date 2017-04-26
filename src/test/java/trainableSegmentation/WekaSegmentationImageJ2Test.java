@@ -37,11 +37,11 @@ public class WekaSegmentationImageJ2Test {
 	}
 
 	public void testClassification() {
-		ImagePlus image = loadImage("bridge.png");
+		ImagePlus image = Utils.loadImage("bridge.png");
 		ImgLabeling<String, IntType> labeling = getBridgeLabeling();
 		Classifier classifier = Classifier.train(image, labeling);
 		RandomAccessibleInterval<IntType> resultImage = classifier.apply(image);
-		IterableInterval<IntType> expectedImage = loadImageIntType("bridge-expected.png");
+		IterableInterval<IntType> expectedImage = Utils.loadImageIntType("bridge-expected.png");
 		ImageJFunctions.show(resultImage);
 		Utils.assertImagesEqual(expectedImage, resultImage);
 	}
@@ -49,15 +49,6 @@ public class WekaSegmentationImageJ2Test {
 
 	public static void main(String... args) {
 		new WekaSegmentationImageJ2Test().testClassification();
-	}
-
-	private IterableInterval<IntType> loadImageIntType(String s) {
-		IterableInterval<UnsignedByteType> expectedImage = ImagePlusAdapter.wrapByte(loadImage(s));
-		return Converters.convert(expectedImage, (b, i) -> i.set(b.get()), new IntType());
-	}
-
-	private static ImagePlus loadImage(String s) {
-		return Utils.loadImagePlusFromResource(s);
 	}
 
 }
