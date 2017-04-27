@@ -8,6 +8,7 @@ import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
@@ -15,13 +16,17 @@ import net.imglib2.type.Type;
 import net.imglib2.type.numeric.IntegerType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
+import org.junit.Assert;
 
 import java.net.URL;
 import java.util.NoSuchElementException;
+import java.util.StringJoiner;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -110,8 +115,23 @@ public class Utils {
 	void assertImagesEqual(final RandomAccessibleInterval<A> a, final RandomAccessibleInterval<A> b) {
 		assertTrue(Intervals.equals(a, b));
 		System.out.println("check picture content.");
-		for(Pair<A,A> p : Views.interval(Views.pair(a, b), b))
-			assertTrue(p.getA().valueEquals(p.getB()));
+		IntervalView<Pair<A, A>> pairs = Views.interval(Views.pair(a, b), b);
+		Cursor<Pair<A, A>> cursor = pairs.cursor();
+		while(cursor.hasNext()) {
+			Pair<A,A> p = cursor.next();
+			boolean equal = p.getA().valueEquals(p.getB());
+			if(!equal)
+				Assert.fail("Pixel values not equal on coordinate " +
+						positionString(cursor) + ", expected: "
+						+ p.getA() + " actual: " + p.getB());
+		}
+	}
+
+	private static <A extends Type<A>> String positionString(Cursor<Pair<A, A>> cursor) {
+		StringJoiner joiner = new StringJoiner(", ");
+		for (int i = 0, n = cursor.numDimensions(); i < n; i++)
+			joiner.add(String.valueOf(cursor.getIntPosition(i)));
+		return "(" + joiner + ")";
 	}
 
 	public static void showDifference(IterableInterval<IntType> resultImage, IterableInterval<IntType> expectedImage) {
@@ -133,6 +153,29 @@ public class Utils {
 
 	public static ImagePlus loadImage(String s) {
 		return Utils.loadImagePlusFromResource(s);
+	}
+
+	public static float psnr(RandomAccessibleInterval<FloatType> expected, RandomAccessibleInterval<FloatType> actual) {
+		return (float) (20 * Math.log10(max(expected)) - 10 * Math.log10(meanSquareError(expected, actual)));
+	}
+
+	private static float meanSquareError(RandomAccessibleInterval<FloatType> a, RandomAccessibleInterval<FloatType> b) {
+		if(!Intervals.equals(a, b))
+			throw new IllegalArgumentException("both arguments must be the same interval");
+		DoubleType sum = new DoubleType(0.0f);
+		Views.interval(Views.pair(a, b), a).forEach(x -> sum.set(sum.get() + sqr(x.getA().get() - x.getB().get())));
+		return (float) (sum.get() / Intervals.numElements(a));
+	}
+
+	private static float sqr(float v) {
+		return v * v;
+	}
+
+	private static float max(RandomAccessibleInterval<FloatType> a) {
+		IntervalView<FloatType> interval = Views.interval(a, a);
+		FloatType result = interval.firstElement();
+		interval.forEach(x -> result.set(Math.max(result.get(), x.get())));
+		return result.get();
 	}
 
 

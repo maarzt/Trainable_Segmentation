@@ -1,19 +1,26 @@
 package trainableSegmentation.ij2;
 
 import ij.ImagePlus;
+import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.algorithm.gauss.Gauss;
+import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import org.junit.Test;
+import org.scijava.Context;
 import trainableSegmentation.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Matthias Arzt
@@ -24,9 +31,10 @@ public class FeatureStackTest {
 
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
+	private static OpService ops = new Context(OpService.class).getService(OpService.class);
+
 	public static void main(String... args) {
-		RandomAccessibleInterval<FloatType> gaussFeatures = generateSingleFeature(bridgeImage, FeatureStack.GAUSSIAN);
-		ImageJFunctions.show(gaussFeatures);
+		new FeatureStackTest().testHessianStack();
 	}
 
 	@Test
@@ -44,16 +52,39 @@ public class FeatureStackTest {
 	public void testGaussStack() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.GAUSSIAN);
 		RandomAccessibleInterval<FloatType> result = createGaussStack(bridgeImg);
-		Utils.assertImagesEqual(expected, result);
+		assertTrue(Utils.psnr(expected, result) > 40);
+	}
+
+	@Test
+	public void testHessianStack() {
+		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.HESSIAN);
+		RandomAccessibleInterval<FloatType> result = createGaussStack(bridgeImg);
+		viewDifference(expected, result);
+		ImageJFunctions.show(expected);
+		ImageJFunctions.show(result);
+		float psnr = Utils.psnr(expected, result);
+		System.out.print(psnr);
+		assertTrue(psnr > 40);
+	}
+
+	private void viewDifference(RandomAccessibleInterval<FloatType> expected, RandomAccessibleInterval<FloatType> result) {
+		RandomAccessible<FloatType> error = Converters.convert(Views.pair(expected, result), (in, out) -> out.set(in.getA().get() - in.getB().get()), new FloatType());
+		view(Views.interval(error, expected));
+	}
+
+	private void view(IntervalView<FloatType> interval) {
+		ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+		ij.ui().show(interval);
 	}
 
 	private RandomAccessibleInterval<FloatType> createGaussStack(Img<FloatType> image) {
 		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
 		features.add(image);
-		final int minimumSigma = 1;
-		final int maximumSigma = 16;
-		for(int sigma = minimumSigma; sigma <= maximumSigma; sigma *= 2)
-			features.add(Gauss.toFloat(sigma, image));
+		final double minimumSigma = 1;
+		final double maximumSigma = 16;
+		for(double sigma = minimumSigma; sigma <= maximumSigma; sigma *= 2)
+			features.add(ops.filter().gauss(image, sigma*0.4));
 		return Views.stack(features);
 	}
 
