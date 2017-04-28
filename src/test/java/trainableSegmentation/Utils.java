@@ -3,12 +3,13 @@ package trainableSegmentation;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.process.ByteProcessor;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
@@ -127,6 +128,14 @@ public class Utils {
 		}
 	}
 
+	public static void assertImagesEqual(final ImagePlus expected, final RandomAccessibleInterval<FloatType> actual) {
+		assertImagesEqual(ImagePlusAdapter.convertFloat(expected), actual);
+	}
+
+	public static void assertImagesEqual(final ImageProcessor expected, final RandomAccessibleInterval<FloatType> actual) {
+		assertImagesEqual(new ImagePlus("expected", expected), actual);
+	}
+
 	private static <A extends Type<A>> String positionString(Cursor<Pair<A, A>> cursor) {
 		StringJoiner joiner = new StringJoiner(", ");
 		for (int i = 0, n = cursor.numDimensions(); i < n; i++)
@@ -178,5 +187,19 @@ public class Utils {
 		return result.get();
 	}
 
+	public static ImagePlus createImage(final String title, final int width, final int height, final int... pixels)
+	{
+		assertEquals( pixels.length, width * height );
+		final byte[] bytes = new byte[pixels.length];
+		for (int i = 0; i < bytes.length; i++) bytes[i] = (byte)pixels[i];
+		final ByteProcessor bp = new ByteProcessor( width, height, bytes, null );
+		return new ImagePlus( title, bp );
+	}
 
+
+	public static ImagePlus createImage(String title, int width, int height, final float... pixels) {
+		assertEquals( pixels.length, width * height);
+		final FloatProcessor processor = new FloatProcessor(width, height, pixels.clone());
+		return new ImagePlus( title, processor);
+	}
 }

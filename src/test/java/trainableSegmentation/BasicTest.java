@@ -7,13 +7,11 @@ import hr.irb.fastRandomForest.FastRandomForest;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.process.ByteProcessor;
 import ij.process.ImageConverter;
 
 import java.net.URL;
 import java.util.function.Consumer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class BasicTest
@@ -21,8 +19,8 @@ public class BasicTest
 	@Test
 	public void test1()
 	{
-		final ImagePlus image = makeTestImage( "test", 2, 2, 17, 2, 123, 54 );
-		final ImagePlus labels = makeTestImage( "labels", 2, 2, 255, 255, 0, 0 );
+		final ImagePlus image = Utils.createImage( "test", 2, 2, 17, 2, 123, 54 );
+		final ImagePlus labels = Utils.createImage( "labels", 2, 2, 255, 255, 0, 0 );
 
 		WekaSegmentation segmentator = new WekaSegmentation( image );
 
@@ -78,15 +76,6 @@ public class BasicTest
 		// test
 		final ImagePlus expected = Utils.loadImagePlusFromResource("/features-expected.tiff");
 		Utils.assertImagesEqual(expected, features);
-	}
-
-	private ImagePlus makeTestImage(final String title, final int width, final int height, final int... pixels)
-	{
-		assertEquals( pixels.length, width * height );
-		final byte[] bytes = new byte[pixels.length];
-		for (int i = 0; i < bytes.length; i++) bytes[i] = (byte)pixels[i];
-		final ByteProcessor bp = new ByteProcessor( width, height, bytes, null );
-		return new ImagePlus( title, bp );
 	}
 
 	private static ImagePlus segmentBridge(final ImagePlus bridge) {
