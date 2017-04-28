@@ -5,6 +5,7 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.FinalInterval;
@@ -97,42 +98,31 @@ public class FeatureStackTest {
 	public void testCalculateHessian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateHessianOnChannel(bridgeImage, 8));
 		RandomAccessibleInterval<FloatType>	actual = calculateHessianOnChannel(bridgeImg, 8);
-		System.out.println(Utils.psnr(expected, actual));
+		assertTrue(Utils.psnr(expected, actual) > 60);
 	}
 
 	private RandomAccessibleInterval<FloatType> calculateHessianOnChannel(Img<FloatType> bridgeImg, float sigma) {
-		ImagePlus channel = bridgeImage;
-
-		int width = channel.getWidth();
-		int height = channel.getHeight();
-
 		double[] sigmas = {0.4 * sigma, 0.4 * sigma};
 		
 		RandomAccessibleInterval<FloatType> blurred = gauss(bridgeImg, sigmas);
 		RandomAccessibleInterval<FloatType> dx = deriveX(blurred);
 		RandomAccessibleInterval<FloatType> dy = deriveY(blurred);
-		RandomAccessibleInterval<FloatType> dxx = deriveX(dx);
-		RandomAccessibleInterval<FloatType> dxy = deriveY(dx);
-		RandomAccessibleInterval<FloatType> dyy = deriveY(dy);
-
-		ImageProcessor ip_xx = imageProcessor(dxx);
-		ImageProcessor ip_xy = imageProcessor(dxy);
-		ImageProcessor ip_yy = imageProcessor(dyy);
+		RandomAccess<FloatType> dxx = deriveX(dx).randomAccess();
+		RandomAccess<FloatType> dxy = deriveY(dx).randomAccess();
+		RandomAccess<FloatType> dyy = deriveY(dy).randomAccess();
 
 		Img<FloatType> features = ops.create().img(extendDimension(bridgeImg, 8), new FloatType());
-		RandomAccess<RealComposite<FloatType>> ra = Views.collapseReal(features).randomAccess();
-		FloatArrayConsumer consumer = (index, value) -> ra.get().get(index).set(value);
 
-		for (int x=0; x<width; x++){
-			for (int y=0; y<height; y++)
-			{
-				float s_xx = ip_xx.getf(x,y);
-				float s_xy = ip_xy.getf(x,y);
-				float s_yy = ip_yy.getf(x,y);
-				ra.setPosition(x, 0);
-				ra.setPosition(y, 1);
-				calculateHessianPerPixel(consumer, x, y, s_xx, s_xy, s_yy);
-			}
+		Cursor<RealComposite<FloatType>> cursor = Views.iterable(Views.collapseReal(features)).cursor();
+		while (cursor.hasNext()) {
+			cursor.next();
+			dxx.setPosition(cursor);
+			dxy.setPosition(cursor);
+			dyy.setPosition(cursor);
+			float s_xx = dxx.get().get();
+			float s_xy = dxy.get().get();
+			float s_yy = dyy.get().get();
+			calculateHessianPerPixel(cursor.get(), s_xx, s_xy, s_yy);
 		}
 
 		return features;
@@ -155,30 +145,26 @@ public class FeatureStackTest {
 	private static final int SQUARE_EIGENVALUE_DIFFERENCE = 6;
 	private static final int NORMALIZED_EIGENVALUE_DIFFERENCE = 7;
 
-	interface FloatArrayConsumer {
-		void set(int index, float value);
-	}
-
-	private void calculateHessianPerPixel(FloatArrayConsumer output,
-		int x, int y, float s_xx, float s_xy, float s_yy)
+	private void calculateHessianPerPixel(RealComposite<FloatType> output,
+										  float s_xx, float s_xy, float s_yy)
 	{
 		final double t = Math.pow(1, 0.75);
 
 		// Hessian module: sqrt (a^2 + b*c + d^2)
-		output.set(HESSIAN, (float) Math.sqrt(s_xx*s_xx + s_xy*s_xy+ s_yy*s_yy));
+		output.get(HESSIAN).set((float) Math.sqrt(s_xx*s_xx + s_xy*s_xy+ s_yy*s_yy));
 		// Trace: a + d
 		final float trace = s_xx + s_yy;
-		output.set(TRACE, trace);
+		output.get(TRACE).set(trace);
 		// Determinant: a*d - c*b
 		final float determinant = s_xx*s_yy-s_xy*s_xy;
-		output.set(DETERMINANT, determinant);
+		output.get(DETERMINANT).set(determinant);
 
 		// Ratio
 		//ipRatio.set((float)(trace*trace) / determinant);
 		// First eigenvalue: (a + d) / 2 + sqrt( ( 4*b^2 + (a - d)^2) / 2 )
-		output.set(EIGENVALUE_1, (float) ( trace/2.0 + Math.sqrt((4*s_xy*s_xy + (s_xx - s_yy)*(s_xx - s_yy)) / 2.0 ) ) );
+		output.get(EIGENVALUE_1).set((float) ( trace/2.0 + Math.sqrt((4*s_xy*s_xy + (s_xx - s_yy)*(s_xx - s_yy)) / 2.0 ) ) );
 		// Second eigenvalue: (a + d) / 2 - sqrt( ( 4*b^2 + (a - d)^2) / 2 )
-		output.set(EIGENVALUE_2, (float) ( trace/2.0 - Math.sqrt((4*s_xy*s_xy + (s_xx - s_yy)*(s_xx - s_yy)) / 2.0 ) ) );
+		output.get(EIGENVALUE_2).set((float) ( trace/2.0 - Math.sqrt((4*s_xy*s_xy + (s_xx - s_yy)*(s_xx - s_yy)) / 2.0 ) ) );
 		// Orientation
 		if (s_xy < 0.0) // -0.5 * acos( (a-d) / sqrt( 4*b^2 + (a - d)^2)) )
 		{
@@ -186,7 +172,7 @@ public class FeatureStackTest {
 					/ Math.sqrt(4.0 * s_xy * s_xy + (s_xx - s_yy) * (s_xx - s_yy)) ));
 			if (Float.isNaN(orientation))
 				orientation = 0;
-			output.set(ORIENTATION, orientation);
+			output.get(ORIENTATION).set(orientation);
 		}
 		else 	// 0.5 * acos( (a-d) / sqrt( 4*b^2 + (a - d)^2)) )
 		{
@@ -194,12 +180,12 @@ public class FeatureStackTest {
 					/ Math.sqrt(4.0 * s_xy * s_xy + (s_xx - s_yy) * (s_xx - s_yy)) ));
 			if (Float.isNaN(orientation))
 				orientation = 0;
-			output.set(ORIENTATION, orientation);
+			output.get(ORIENTATION).set(orientation);
 		}
 		// Gamma-normalized square eigenvalue difference
-		output.set(SQUARE_EIGENVALUE_DIFFERENCE, (float) ( Math.pow(t,4) * trace*trace * ( (s_xx - s_yy)*(s_xx - s_yy) + 4*s_xy*s_xy ) ) );
+		output.get(SQUARE_EIGENVALUE_DIFFERENCE).set((float) ( Math.pow(t,4) * trace*trace * ( (s_xx - s_yy)*(s_xx - s_yy) + 4*s_xy*s_xy ) ) );
 		// Square of Gamma-normalized eigenvalue difference
-		output.set(NORMALIZED_EIGENVALUE_DIFFERENCE, (float) ( Math.pow(t,2) * ( (s_xx - s_yy)*(s_xx - s_yy) + 4*s_xy*s_xy ) ) );
+		output.get(NORMALIZED_EIGENVALUE_DIFFERENCE).set((float) ( Math.pow(t,2) * ( (s_xx - s_yy)*(s_xx - s_yy) + 4*s_xy*s_xy ) ) );
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {
