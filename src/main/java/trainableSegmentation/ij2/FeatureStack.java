@@ -1044,36 +1044,7 @@ public class FeatureStack
 	 */
 	public void addDoG(float sigma1, float sigma2)
 	{
-		GaussianBlur gs = new GaussianBlur();
-		
-		// Get channel(s) to process
-		ImagePlus[] channels = extractChannels(originalImage);
-
-		ImagePlus[] results = new ImagePlus[ channels.length ];
-
-		for(int ch=0; ch < channels.length; ch++)
-		{
-			ImageProcessor ip_1 = channels[ch].getProcessor().duplicate();
-			//gs.blur(ip_1, sigma1);
-			gs.blurGaussian(ip_1, 0.4 * sigma1, 0.4 * sigma1,  0.0002);
-			ImageProcessor ip_2 = channels[ch].getProcessor().duplicate();			
-			//gs.blur(ip_2, sigma2);
-			gs.blurGaussian(ip_2, 0.4 * sigma2, 0.4 * sigma2,  0.0002);
-
-			ImageProcessor ip = new FloatProcessor(width, height);
-
-			for (int x=0; x<width; x++){
-				for (int y=0; y<height; y++){
-					float v1 = ip_1.getf(x,y);
-					float v2 = ip_2.getf(x,y);
-					ip.setf(x,y, v2-v1);
-				}
-			}
-		
-			results[ ch ] = new ImagePlus(availableFeatures[DOG]+ "_"+sigma1+"_"+sigma2, ip);
-		}
-		
-		ImagePlus merged = mergeResultChannels(results);		
+		ImagePlus merged = calculateDoG(originalImage, sigma1, sigma2);
 		wholeStack.addSlice(merged.getTitle(), merged.getImageStack().getProcessor(1));
 	}
 	
@@ -1094,43 +1065,47 @@ public class FeatureStack
 		
 		return new Callable<ImagePlus>(){
 			public ImagePlus call(){
-		
-				final int width = originalImage.getWidth();
-				final int height = originalImage.getHeight();
-				
-				GaussianBlur gs = new GaussianBlur();
-				// Get channel(s) to process
-				ImagePlus[] channels = extractChannels(originalImage);
 
-				ImagePlus[] results = new ImagePlus[ channels.length ];
-
-				for(int ch=0; ch < channels.length; ch++)
-				{
-					ImageProcessor ip_1 = channels[ch].getProcessor().duplicate();
-					//gs.blur(ip_1, sigma1);
-					gs.blurGaussian(ip_1, 0.4 * sigma1, 0.4 * sigma1,  0.0002);
-					ImageProcessor ip_2 = channels[ch].getProcessor().duplicate();
-					//gs.blur(ip_2, sigma2);
-					gs.blurGaussian(ip_2, 0.4 * sigma2, 0.4 * sigma2,  0.0002);
-
-					ImageProcessor ip = new FloatProcessor(width, height);
-
-					for (int x=0; x<width; x++){
-						for (int y=0; y<height; y++){
-							float v1 = ip_1.getf(x,y);
-							float v2 = ip_2.getf(x,y);
-							ip.setf(x,y, v2-v1);
-						}
-					}
-				
-					results[ ch ] = new ImagePlus(availableFeatures[DOG]+ "_"+sigma1+"_"+sigma2, ip);
-				}
-				
-				return mergeResultChannels(results);
+				return calculateDoG(originalImage, sigma1, sigma2);
 			}
 		};
 	}
-	
+
+	private static ImagePlus calculateDoG(ImagePlus originalImage, float sigma1, float sigma2) {
+		final int width = originalImage.getWidth();
+		final int height = originalImage.getHeight();
+
+		GaussianBlur gs = new GaussianBlur();
+		// Get channel(s) to process
+		ImagePlus[] channels = extractChannels(originalImage);
+
+		ImagePlus[] results = new ImagePlus[ channels.length ];
+
+		for(int ch=0; ch < channels.length; ch++)
+		{
+			ImageProcessor ip_1 = channels[ch].getProcessor().duplicate();
+			//gs.blur(ip_1, sigma1);
+			gs.blurGaussian(ip_1, 0.4 * sigma1, 0.4 * sigma1,  0.0002);
+			ImageProcessor ip_2 = channels[ch].getProcessor().duplicate();
+			//gs.blur(ip_2, sigma2);
+			gs.blurGaussian(ip_2, 0.4 * sigma2, 0.4 * sigma2,  0.0002);
+
+			ImageProcessor ip = new FloatProcessor(width, height);
+
+			for (int x=0; x<width; x++){
+				for (int y=0; y<height; y++){
+					float v1 = ip_1.getf(x,y);
+					float v2 = ip_2.getf(x,y);
+					ip.setf(x,y, v2-v1);
+				}
+			}
+
+			results[ ch ] = new ImagePlus(availableFeatures[DOG]+ "_"+sigma1+"_"+sigma2, ip);
+		}
+
+		return mergeResultChannels(results);
+	}
+
 	/**
 	 * Add membrane features to the stack (single thread version)
 	 * @param patchSize size of the filter to be used
@@ -1289,7 +1264,7 @@ public class FeatureStack
 	 * @param originalImage input image
 	 * @return array of channels
 	 */
-	ImagePlus[] extractChannels(final ImagePlus originalImage) 
+	static ImagePlus[] extractChannels(final ImagePlus originalImage)
 	{
 		final int width = originalImage.getWidth();
 		final int height = originalImage.getHeight();
@@ -1323,7 +1298,7 @@ public class FeatureStack
 	 * @param channels results channels
 	 * @return result image 
 	 */
-	ImagePlus mergeResultChannels(final ImagePlus[] channels) 
+	static ImagePlus mergeResultChannels(final ImagePlus[] channels)
 	{
 		if(channels.length > 1)
 		{						
@@ -1348,7 +1323,7 @@ public class FeatureStack
 	 * @param blueChannel image stack representing the blue channel
 	 * @return RGB merged stack
 	 */
-	ImageStack mergeStacks(ImageStack redChannel, ImageStack greenChannel, ImageStack blueChannel)
+	static ImageStack mergeStacks(ImageStack redChannel, ImageStack greenChannel, ImageStack blueChannel)
 	{
 		final ImageStack colorStack = new ImageStack( redChannel.getWidth(), redChannel.getHeight());
 		
