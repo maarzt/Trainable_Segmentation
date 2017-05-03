@@ -68,13 +68,13 @@ public class BasicTest
 
 	private void testDefaultFeaturesOnBridge(Consumer<FeatureStack> updateFeaturesMethod) {
 		// setup
-		final ImagePlus bridge = Utils.loadImagePlusFromResource("/bridge.png");
+		final ImagePlus bridge = Utils.loadImagePlusFromResource("bridge.png");
 		// process
 		final FeatureStack featureStack = new FeatureStack(bridge);
 		updateFeaturesMethod.accept(featureStack);
 		final ImagePlus features = new ImagePlus("features", featureStack.getStack());
 		// test
-		final ImagePlus expected = Utils.loadImagePlusFromResource("/features-expected.tiff");
+		final ImagePlus expected = Utils.loadImagePlusFromResource("features-expected.tiff");
 		Utils.assertImagesEqual(expected, features);
 	}
 
