@@ -8,6 +8,8 @@ import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -15,6 +17,7 @@ import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.IntegerType;
+import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.DoubleType;
@@ -143,10 +146,13 @@ public class Utils {
 		return "(" + joiner + ")";
 	}
 
-	public static void showDifference(IterableInterval<IntType> resultImage, IterableInterval<IntType> expectedImage) {
+	public static <T extends NumericType<T>> void showDifference(RandomAccessibleInterval<T> expectedImage, RandomAccessibleInterval<T> resultImage) {
+		showDifference(Views.iterable(expectedImage), Views.iterable(resultImage));
+	}
+
+	public static <T extends NumericType<T>> void showDifference(IterableInterval<T> expectedImage, IterableInterval<T> resultImage) {
 		ImageJ imageJ = new ImageJ();
-		IterableInterval<IntType> difference = imageJ.op().copy().iterableInterval(expectedImage);
-		imageJ.op().math().subtract(difference, expectedImage, resultImage);
+		IterableInterval<T> difference = imageJ.op().math().subtract(expectedImage, resultImage);
 		imageJ.ui().showUI();
 		imageJ.ui().show(difference);
 	}
@@ -170,10 +176,18 @@ public class Utils {
 
 	private static float meanSquareError(RandomAccessibleInterval<FloatType> a, RandomAccessibleInterval<FloatType> b) {
 		if(!Intervals.equals(a, b))
-			throw new IllegalArgumentException("both arguments must be the same interval");
+			throw new IllegalArgumentException("both arguments must be the same interval" +
+					"given: " + showInterval(a) + " and: " + showInterval(b));
 		DoubleType sum = new DoubleType(0.0f);
 		Views.interval(Views.pair(a, b), a).forEach(x -> sum.set(sum.get() + sqr(x.getA().get() - x.getB().get())));
 		return (float) (sum.get() / Intervals.numElements(a));
+	}
+
+	private static String showInterval(Interval b) {
+		StringJoiner j = new StringJoiner(", ");
+		int n = b.numDimensions();
+		for (int i = 0; i < n; i++) j.add(b.min(i) + " - " + b.max(i));
+		return "[" + j + "]";
 	}
 
 	private static float sqr(float v) {
