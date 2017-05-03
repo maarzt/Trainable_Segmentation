@@ -9,6 +9,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.outofbounds.OutOfBoundsBorderFactory;
+import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import net.imglib2.view.composite.RealComposite;
@@ -71,6 +72,19 @@ public class FeatureStack2 {
 		}
 
 		return features;
+	}
+	
+	public static RandomAccessibleInterval<FloatType>
+		createDifferenceOfGaussiansStack(Img<FloatType> image)
+	{
+		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
+		features.add(image);
+		final double minimumSigma = 1;
+		final double maximumSigma = 16;
+		for (double sigma1 = minimumSigma; sigma1 <= maximumSigma; sigma1 *= 2)
+			for (double sigma2 = minimumSigma; sigma2 < sigma1; sigma2 *= 2)
+				features.add(calculateDifferenceOfGaussians(image, sigma1, sigma2));
+		return Views.stack(features);
 	}
 
 	private static Dimensions extendDimension(Dimensions dimension, int size) {
@@ -156,4 +170,10 @@ public class FeatureStack2 {
 		return ops.filter().convolve(blurred, kernel, new OutOfBoundsBorderFactory<>());
 	}
 
+	public static RandomAccessibleInterval<FloatType> calculateDifferenceOfGaussians(Img<FloatType> img, double sigma1, double sigma2) {
+		RandomAccessibleInterval<FloatType> result = ops.create().img(img);
+		OutOfBoundsFactory<FloatType, RandomAccessibleInterval<FloatType>> border = new OutOfBoundsBorderFactory<>();
+		ops.filter().dog(result, img, 0.4 * sigma1, 0.4 * sigma2, border);
+		return result;
+	}
 }

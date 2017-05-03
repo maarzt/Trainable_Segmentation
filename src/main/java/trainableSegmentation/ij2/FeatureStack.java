@@ -1071,7 +1071,7 @@ public class FeatureStack
 		};
 	}
 
-	private static ImagePlus calculateDoG(ImagePlus originalImage, float sigma1, float sigma2) {
+	public static ImagePlus calculateDoG(ImagePlus originalImage, float sigma1, float sigma2) {
 		final int width = originalImage.getWidth();
 		final int height = originalImage.getHeight();
 

@@ -34,7 +34,7 @@ public class FeatureStackTest {
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
 	public static void main(String... args) {
-		new FeatureStackTest().testHessianStack();
+		new FeatureStackTest().testDOG();
 	}
 
 	@Test
@@ -67,6 +67,20 @@ public class FeatureStackTest {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateHessianOnChannel(bridgeImage, 8));
 		RandomAccessibleInterval<FloatType>	actual = FeatureStack2.calculateHessianOnChannel(bridgeImg, 8);
 		assertTrue(Utils.psnr(expected, actual) > 60);
+	}
+
+	@Test
+	public void testDifferenceOfGaussian() {
+		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.DOG);
+		RandomAccessibleInterval<FloatType> result = FeatureStack2.createDifferenceOfGaussiansStack(bridgeImg);
+		assertTrue(Utils.psnr(expected, result) > 50);
+	}
+
+	@Test
+	public void testDOG() {
+		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateDoG(bridgeImage, 8, 4));
+		RandomAccessibleInterval<FloatType> result = FeatureStack2.calculateDifferenceOfGaussians(bridgeImg, 8, 4);
+		assertTrue(Utils.psnr(expected, result) > 50);
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {
