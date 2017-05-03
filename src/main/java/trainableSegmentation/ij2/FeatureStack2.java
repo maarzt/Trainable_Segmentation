@@ -15,6 +15,7 @@ import net.imglib2.view.composite.RealComposite;
 import org.scijava.Context;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,21 +35,28 @@ public class FeatureStack2 {
 		return Views.stack(features);
 	}
 
-	public static RandomAccessibleInterval<FloatType> createHessianStack(Img<FloatType> img) {
-		return null; // TODO
+	public static RandomAccessibleInterval<FloatType> createHessianStack(Img<FloatType> image) {
+		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
+		features.add(Views.stack(Collections.singletonList(image)));
+		final double minimumSigma = 1;
+		final double maximumSigma = 16;
+		features.add(calculateHessianOnChannel(image, 0));
+		for(double sigma = minimumSigma; sigma <= maximumSigma; sigma *= 2)
+			features.add(calculateHessianOnChannel(image, sigma));
+		return Views.concatenate(2, features);
 	}
 
-	public static RandomAccessibleInterval<FloatType> calculateHessianOnChannel(Img<FloatType> bridgeImg, float sigma) {
+	public static RandomAccessibleInterval<FloatType> calculateHessianOnChannel(Img<FloatType> image, double sigma) {
 		double[] sigmas = {0.4 * sigma, 0.4 * sigma};
 
-		RandomAccessibleInterval<FloatType> blurred = gauss(bridgeImg, sigmas);
+		RandomAccessibleInterval<FloatType> blurred = gauss(image, sigmas);
 		RandomAccessibleInterval<FloatType> dx = deriveX(blurred);
 		RandomAccessibleInterval<FloatType> dy = deriveY(blurred);
 		RandomAccess<FloatType> dxx = deriveX(dx).randomAccess();
 		RandomAccess<FloatType> dxy = deriveY(dx).randomAccess();
 		RandomAccess<FloatType> dyy = deriveY(dy).randomAccess();
 
-		Img<FloatType> features = ops.create().img(extendDimension(bridgeImg, 8), new FloatType());
+		Img<FloatType> features = ops.create().img(extendDimension(image, 8), new FloatType());
 
 		Cursor<RealComposite<FloatType>> cursor = Views.iterable(Views.collapseReal(features)).cursor();
 		while (cursor.hasNext()) {
@@ -124,9 +132,9 @@ public class FeatureStack2 {
 		// Square of Gamma-normalized eigenvalue difference
 		output.get(NORMALIZED_EIGENVALUE_DIFFERENCE).set((float) ( Math.pow(t,2) * ( (s_xx - s_yy)*(s_xx - s_yy) + 4*s_xy*s_xy ) ) );
 	}
-	public static RandomAccessibleInterval<FloatType> gauss(Img<FloatType> bridgeImg, double[] sigmas) {
-		RandomAccessibleInterval<FloatType> blurred = ops.create().img(bridgeImg);
-		ops.filter().gauss(blurred, bridgeImg, sigmas, new OutOfBoundsBorderFactory<>());
+	public static RandomAccessibleInterval<FloatType> gauss(Img<FloatType> image, double[] sigmas) {
+		RandomAccessibleInterval<FloatType> blurred = ops.create().img(image);
+		ops.filter().gauss(blurred, image, sigmas, new OutOfBoundsBorderFactory<>());
 		return blurred;
 	}
 

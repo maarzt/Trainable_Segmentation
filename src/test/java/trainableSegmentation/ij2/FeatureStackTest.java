@@ -34,7 +34,7 @@ public class FeatureStackTest {
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
 	public static void main(String... args) {
-		new FeatureStackTest().testCalculateHessian();
+		new FeatureStackTest().testHessianStack();
 	}
 
 	@Test
@@ -55,17 +55,11 @@ public class FeatureStackTest {
 		assertTrue(Utils.psnr(expected, result) > 40);
 	}
 
-	@Ignore("not implemented yet")
 	@Test
 	public void testHessianStack() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.HESSIAN);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createHessianStack(bridgeImg);
-		viewDifference(expected, result);
-		ImageJFunctions.show(expected);
-		ImageJFunctions.show(result);
-		float psnr = Utils.psnr(expected, result);
-		System.out.print(psnr);
-		assertTrue(psnr > 40);
+		assertTrue(Utils.psnr(expected, result) > 70);
 	}
 
 	@Test
