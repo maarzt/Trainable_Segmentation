@@ -183,6 +183,11 @@
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ops</artifactId>
+			<version>0.36.1-SNAPSHOT</version>
+		</dependency>
 
 		<!-- Java3D dependencies -->
 		<dependency>
