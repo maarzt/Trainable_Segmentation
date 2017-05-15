@@ -12,11 +12,9 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import org.junit.Ignore;
 import org.junit.Test;
 import trainableSegmentation.Utils;
 
@@ -34,7 +32,7 @@ public class FeatureStackTest {
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
 	public static void main(String... args) {
-		new FeatureStackTest().testDOG();
+		new FeatureStackTest().testSobel();
 	}
 
 	@Test
@@ -77,10 +75,19 @@ public class FeatureStackTest {
 	}
 
 	@Test
-	public void testDOG() {
+	public void testSingleDifferenceOfGaussian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateDoG(bridgeImage, 8, 4));
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.calculateDifferenceOfGaussians(bridgeImg, 8, 4);
 		assertTrue(Utils.psnr(expected, result) > 50);
+	}
+
+	@Test
+	public void testSobel() {
+		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.SOBEL);
+		RandomAccessibleInterval<FloatType> result = FeatureStack2.createSobelStack(bridgeImg);
+		float psnr = Utils.psnr(expected, result);
+		System.out.print(psnr);
+		assertTrue(psnr > 60);
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {

@@ -5,12 +5,17 @@ import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.Converter;
+import net.imglib2.converter.Converters;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.outofbounds.OutOfBoundsBorderFactory;
 import net.imglib2.outofbounds.OutOfBoundsFactory;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.imglib2.view.composite.RealComposite;
 import org.scijava.Context;
@@ -175,5 +180,29 @@ public class FeatureStack2 {
 		OutOfBoundsFactory<FloatType, RandomAccessibleInterval<FloatType>> border = new OutOfBoundsBorderFactory<>();
 		ops.filter().dog(result, img, 0.4 * sigma1, 0.4 * sigma2, border);
 		return result;
+	}
+
+	public static RandomAccessibleInterval<FloatType> createSobelStack(Img<FloatType> image) {
+		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
+		features.add(image);
+		final double minimumSigma = 1;
+		final double maximumSigma = 16;
+		features.add(calculateSingleGradient(image, 0.0));
+		for(double sigma = minimumSigma; sigma <= maximumSigma; sigma *= 2)
+			features.add(calculateSingleGradient(image, sigma));
+		return Views.stack(features);
+	}
+
+	private static RandomAccessibleInterval<FloatType> calculateSingleGradient(Img<FloatType> image, double sigma) {
+		RandomAccessibleInterval<FloatType> blurred = gauss(image, new double[]{0.4 * sigma, 0.4 * sigma});
+		RandomAccessibleInterval<Pair<FloatType, FloatType>> derivatives =
+				Views.interval(Views.pair(deriveX(blurred), deriveY(blurred)), blurred);
+		Converter<Pair<FloatType, FloatType>, FloatType> converter =
+			(input, output) -> output.set(norm2(input.getA().get(), input.getB().get()));
+		return Converters.convert(derivatives, converter, new FloatType());
+	}
+
+	private static float norm2(float x, float y) {
+		return (float) Math.sqrt(x * x + y * y);
 	}
 }
