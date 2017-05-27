@@ -170,6 +170,33 @@ public class Lipschitz_ implements PlugInFilter
 		int sign = (m_Down ? 1 : -1 );
 		int topdown = (m_Down ? 0 : 255);
 
+		copyAndMap1(ip, srcPixels, tmpBytePixels, tmpShortPixels, sign);
+
+		for (int ii=0; ii < m_channels; ii++)
+		{
+			copy(srcPixels[ii], destPixels[ii]);
+		}
+
+		slope = (int) (m_Slope);
+		slope1= (int) (slope * Math.sqrt(2.0));
+		maxz = m_channels;
+
+
+		for (int z = 0; z < m_channels; z++)
+		{
+			process1(slope, slope1, progress, sign, topdown, destPixels[z], srcPixels[z]);
+		}
+
+		for (int z= 0; z < maxz; z++)
+		{
+			process2(slope, slope1, progress, sign, topdown, destPixels[z]);
+		}
+
+		copyAndMap2(ip, destPixels, srcPixels, tmpBytePixels, tmpShortPixels, sign);
+
+	}
+
+	private void copyAndMap1(ImageProcessor ip, int[][] srcPixels, byte[][] tmpBytePixels, short[][] tmpShortPixels, int sign) {
 		if (m_channels == 1)
 		{
 			if (m_short)
@@ -195,80 +222,84 @@ public class Lipschitz_ implements PlugInFilter
 				srcPixels[ii][ij] = (m_short? sign *(tmpShortPixels[ii][ij] & 0xffff):sign *(tmpBytePixels[ii][ij] & 0xff));
 			}
 		}
+	}
 
-		for (int ii=0; ii < m_channels; ii++)
+	private void copy(int[] src, int[] dest) {
+		for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
 		{
-			for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
-			{
-				destPixels[ii][ij] = srcPixels[ii][ij];
-			}
+			dest[ij] = src[ij];
 		}
+	}
 
-		slope = (int) (m_Slope);
-		slope1= (int) (slope * Math.sqrt(2.0));
-		maxz = m_channels;
-
-
-		for (int z = 0; z < m_channels; z++)
+	private void process1(int slope, int slope1, Progress progress, int sign, int topdown, int[] destPixel, int[] srcPixel) {
+		int p2;
+		int p3;
+		int p;
+		int p1;
+		int p4;
+		for (int y = m_roi.y; y < m_roi.y + m_roi.height; y++)   // rows
 		{
-			for (int y = m_roi.y; y < m_roi.y + m_roi.height; y++)   // rows
+			progress.step();
+			p2= sign * (topdown + (sign) * slope);
+			p3= sign * (topdown + (sign) * slope1);
+			for (int x = m_roi.x; x < m_roi.x+m_roi.width; x++) // columns
 			{
-				progress.step();
-				p2= sign * (topdown + (sign) * slope);
-				p3= sign * (topdown + (sign) * slope1);
-				for (int x = m_roi.x; x < m_roi.x+m_roi.width; x++) // columns
-				{
-					p = (p2 - slope);
-					p1 = (p3 - slope1);
-					if (p1 > p) p= p1;
-					p3 = destPixels[z][x + ImageWidth * (Math.max(y - 1,0))];
-					p1 = p3 - slope;
-					if (p1 > p) p= p1;
+				p = (p2 - slope);
+				p1 = (p3 - slope1);
+				if (p1 > p) p= p1;
+				p3 = destPixel[x + ImageWidth * (Math.max(y - 1,0))];
+				p1 = p3 - slope;
+				if (p1 > p) p= p1;
 
-					p4 = destPixels[z][Math.min(x+1,ImageWidth-1) + ImageWidth * (Math.max(y - 1,0))] ;
-					p1 = p4 - slope1;
-					if (p1 > p) p= p1;
+				p4 = destPixel[Math.min(x+1,ImageWidth-1) + ImageWidth * (Math.max(y - 1,0))] ;
+				p1 = p4 - slope1;
+				if (p1 > p) p= p1;
 
-					p2 = srcPixels[z][x + ImageWidth * y];
-					if (p > p2) {
-						destPixels[z][x + ImageWidth * y] = p ;
-						p2 = p;
-					}
+				p2 = srcPixel[x + ImageWidth * y];
+				if (p > p2) {
+					destPixel[x + ImageWidth * y] = p ;
+					p2 = p;
 				}
 			}
 		}
+	}
 
-		for (int z= 0; z < maxz; z++)
+	private void process2(int slope, int slope1, Progress progress, int sign, int topdown, int[] destPixel) {
+		int p2;
+		int p3;
+		int p;
+		int p1;
+		int p4;
+		for (int y = m_roi.y+ m_roi.height - 1; y >= m_roi.y; y--)   // rows
 		{
-			for (int y = m_roi.y+ m_roi.height - 1; y >= m_roi.y; y--)   // rows
+			progress.step();
+			p2= sign * (topdown + (sign) * slope);
+			p3= sign * (topdown + (sign) * slope1);
+			for (int x= m_roi.x + m_roi.width - 1; x >= m_roi.x; x--)  // columns
 			{
-				progress.step();
-				p2= sign * (topdown + (sign) * slope);
-				p3= sign * (topdown + (sign) * slope1);
-				for (int x= m_roi.x + m_roi.width - 1; x >= m_roi.x; x--)  // columns
+				p= (p2 - slope);
+				p1= (p3 - slope1);
+				if (p1 > p) p= p1;
+
+				p3 = destPixel[x + ImageWidth * (Math.min(y + 1,ImageHeight-1))];
+				p1 = p3 - slope;
+				if (p1 > p)   p= p1;
+
+				p4 = destPixel[Math.max(x-1,0) + ImageWidth * (Math.min(y + 1,ImageHeight-1))];
+				p1 = p4 - slope1;
+				if (p1 > p) p= p1;
+
+				p2 = destPixel[x + ImageWidth * y];
+				if (p > p2)
 				{
-					p= (p2 - slope);
-					p1= (p3 - slope1);
-					if (p1 > p) p= p1;
-
-					p3 = destPixels[z][x + ImageWidth * (Math.min(y + 1,ImageHeight-1))];
-					p1 = p3 - slope;
-					if (p1 > p)   p= p1;
-
-					p4 = destPixels[z][Math.max(x-1,0) + ImageWidth * (Math.min(y + 1,ImageHeight-1))];
-					p1 = p4 - slope1;
-					if (p1 > p) p= p1;
-
-					p2 = destPixels[z][x + ImageWidth * y];
-					if (p > p2)
-					{
-						destPixels[z][x + ImageWidth * y] = p ;
-						p2 = p;
-					}
+					destPixel[x + ImageWidth * y] = p ;
+					p2 = p;
 				}
 			}
 		}
+	}
 
+	private void copyAndMap2(ImageProcessor ip, int[][] destPixels, int[][] srcPixels, byte[][] tmpBytePixels, short[][] tmpShortPixels, int sign) {
 		for (int ii=0; ii < m_channels; ii++)
 		{
 			for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
@@ -311,7 +342,6 @@ public class Lipschitz_ implements PlugInFilter
 			ColorProcessor cip = (ColorProcessor) ip;
 			cip.setRGB(tmpBytePixels[0],tmpBytePixels[1],tmpBytePixels[2]);
 		}
-
 	}
 
 	class Progress {
