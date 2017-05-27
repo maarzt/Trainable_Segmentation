@@ -44,6 +44,7 @@ import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
 
 import java.awt.Rectangle;
+import java.util.Arrays;
 import java.util.Date;
 
 public class Lipschitz_ implements PlugInFilter 
@@ -151,8 +152,6 @@ public class Lipschitz_ implements PlugInFilter
 	//-----------------------------------------------------------------------------------
 	public void Lipschitz2D(ImageProcessor ip)
 	{     
-		int slope, slope1, p, p1, p2, p3, p4, maxz; 
-
 		m_roi = ip.getRoi();
 		ImageHeight = ip.getHeight();
 		ImageWidth = ip.getWidth();
@@ -162,49 +161,40 @@ public class Lipschitz_ implements PlugInFilter
 
 		Progress progress = new Progress(2 * m_roi.height * m_channels);
 
-		int [][] destPixels = new int[m_channels][ImageHeight * ImageWidth];
-		int [][] srcPixels = new int[m_channels][ImageHeight * ImageWidth];
-		byte [][] tmpBytePixels = new byte[m_channels][ImageHeight * ImageWidth];
-		short [][] tmpShortPixels = new short [m_channels][ImageHeight * ImageWidth];
-
 		int sign = (m_Down ? 1 : -1 );
-		int topdown = (m_Down ? 0 : 255);
 
-		copyAndMap1(ip, srcPixels, tmpBytePixels, tmpShortPixels, sign);
+		int[][] srcPixels = copyAndMap1(ip, sign);
 
+		int [][] destPixels = new int[m_channels][];
 		for (int ii=0; ii < m_channels; ii++)
 		{
-			copy(srcPixels[ii], destPixels[ii]);
+			destPixels[ii] = srcPixels[ii].clone();
 		}
-
-		slope = (int) (m_Slope);
-		slope1= (int) (slope * Math.sqrt(2.0));
-		maxz = m_channels;
-
 
 		for (int z = 0; z < m_channels; z++)
-		{
-			process1(slope, slope1, progress, sign, topdown, destPixels[z], srcPixels[z]);
-		}
+			process1(progress, destPixels[z], srcPixels[z]);
 
-		for (int z= 0; z < maxz; z++)
-		{
-			process2(slope, slope1, progress, sign, topdown, destPixels[z]);
-		}
+		for (int z= 0; z < m_channels; z++)
+			process2(progress, destPixels[z]);
 
-		copyAndMap2(ip, destPixels, srcPixels, tmpBytePixels, tmpShortPixels, sign);
-
+		copyAndMap2(ip, destPixels, srcPixels, sign);
 	}
 
-	private void copyAndMap1(ImageProcessor ip, int[][] srcPixels, byte[][] tmpBytePixels, short[][] tmpShortPixels, int sign) {
+	private int[][] copyAndMap1(ImageProcessor ip, int sign) {
+		byte [][] tmpBytePixels = null;
+		short [][] tmpShortPixels = null;
+		int [][] srcPixels = new int[m_channels][ImageHeight * ImageWidth];
+
 		if (m_channels == 1)
 		{
 			if (m_short)
 			{
+				tmpShortPixels = new short[m_channels][];
 				tmpShortPixels[0] = (short []) ip.getPixels();
 			}
 			else
 			{
+				tmpBytePixels = new byte[m_channels][];
 				tmpBytePixels[0] = (byte []) ip.getPixels();
 			}
 
@@ -212,6 +202,7 @@ public class Lipschitz_ implements PlugInFilter
 		else
 		{
 			ColorProcessor cip = (ColorProcessor) ip;
+			tmpBytePixels = new byte[m_channels][ImageHeight * ImageWidth];
 			cip.getRGB(tmpBytePixels[0], tmpBytePixels[1], tmpBytePixels[2]);
 		}
 
@@ -222,16 +213,15 @@ public class Lipschitz_ implements PlugInFilter
 				srcPixels[ii][ij] = (m_short? sign *(tmpShortPixels[ii][ij] & 0xffff):sign *(tmpBytePixels[ii][ij] & 0xff));
 			}
 		}
+
+		return srcPixels;
 	}
 
-	private void copy(int[] src, int[] dest) {
-		for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
-		{
-			dest[ij] = src[ij];
-		}
-	}
-
-	private void process1(int slope, int slope1, Progress progress, int sign, int topdown, int[] destPixel, int[] srcPixel) {
+	private void process1(Progress progress, int[] destPixel, int[] srcPixel) {
+		int sign = (m_Down ? 1 : -1 );
+		int topdown = (m_Down ? 0 : 255);
+		int slope = (int) (m_Slope);
+		int slope1 = (int) (slope * Math.sqrt(2.0));
 		int p2;
 		int p3;
 		int p;
@@ -264,7 +254,11 @@ public class Lipschitz_ implements PlugInFilter
 		}
 	}
 
-	private void process2(int slope, int slope1, Progress progress, int sign, int topdown, int[] destPixel) {
+	private void process2(Progress progress, int[] destPixel) {
+		int sign = (m_Down ? 1 : -1 );
+		int topdown = (m_Down ? 0 : 255);
+		int slope = (int) (m_Slope);
+		int slope1 = (int) (slope * Math.sqrt(2.0));
 		int p2;
 		int p3;
 		int p;
@@ -299,7 +293,9 @@ public class Lipschitz_ implements PlugInFilter
 		}
 	}
 
-	private void copyAndMap2(ImageProcessor ip, int[][] destPixels, int[][] srcPixels, byte[][] tmpBytePixels, short[][] tmpShortPixels, int sign) {
+	private void copyAndMap2(ImageProcessor ip, int[][] destPixels, int[][] srcPixels, int sign) {
+		byte[][] tmpBytePixels = new byte[m_channels][ImageHeight * ImageWidth];
+		short[][] tmpShortPixels = new short[m_channels][ImageHeight * ImageWidth];
 		for (int ii=0; ii < m_channels; ii++)
 		{
 			for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
