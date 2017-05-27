@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class FeatureStackTest {
 
-	private static ImagePlus bridgeImage = Utils.loadImage("bridge.png");
+	private static ImagePlus bridgeImage = Utils.loadImage("nuclei.tif");
 
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
@@ -57,28 +57,28 @@ public class FeatureStackTest {
 	public void testHessianStack() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.HESSIAN);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createHessianStack(bridgeImg);
-		assertTrue(Utils.psnr(expected, result) > 70);
+		assertTrue(Utils.psnr(expected, result) > 40);
 	}
 
 	@Test
 	public void testCalculateHessian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateHessianOnChannel(bridgeImage, 8));
 		RandomAccessibleInterval<FloatType>	actual = FeatureStack2.calculateHessianOnChannel(bridgeImg, 8);
-		assertTrue(Utils.psnr(expected, actual) > 60);
+		assertTrue(Utils.psnr(expected, actual) > 40);
 	}
 
 	@Test
 	public void testDifferenceOfGaussian() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.DOG);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createDifferenceOfGaussiansStack(bridgeImg);
-		assertTrue(Utils.psnr(expected, result) > 50);
+		assertTrue(Utils.psnr(expected, result) > 40);
 	}
 
 	@Test
 	public void testSingleDifferenceOfGaussian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateDoG(bridgeImage, 8, 4));
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.calculateDifferenceOfGaussians(bridgeImg, 8, 4);
-		assertTrue(Utils.psnr(expected, result) > 50);
+		assertTrue(Utils.psnr(expected, result) > 30);
 	}
 
 	@Test
@@ -87,7 +87,7 @@ public class FeatureStackTest {
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createSobelStack(bridgeImg);
 		float psnr = Utils.psnr(expected, result);
 		System.out.print(psnr);
-		assertTrue(psnr > 60);
+		assertTrue(psnr > 40);
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {
@@ -132,7 +132,7 @@ public class FeatureStackTest {
 
 	@Test
 	public void testLegacyDefaultFeatureGeneration() {
-		RandomAccessibleInterval<FloatType> expectedImage = Utils.loadImageFloatType("features-expected.tiff");
+		RandomAccessibleInterval<FloatType> expectedImage = Utils.loadImageFloatType("nuclei-features.tif");
 		boolean[] enabledFeatures = {true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
 		RandomAccessibleInterval<FloatType> features = generateFeatureStack(bridgeImage, enabledFeatures);
 		Utils.assertImagesEqual(expectedImage, features);
