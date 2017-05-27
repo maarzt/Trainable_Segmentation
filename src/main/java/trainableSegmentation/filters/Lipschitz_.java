@@ -167,6 +167,9 @@ public class Lipschitz_ implements PlugInFilter
 		byte [][] tmpBytePixels = new byte[m_channels][ImageHeight * ImageWidth];
 		short [][] tmpShortPixels = new short [m_channels][ImageHeight * ImageWidth];
 
+		int sign = (m_Down ? 1 : -1 );
+		int topdown = (m_Down ? 0 : 255);
+
 		if (m_channels == 1)
 		{
 			if (m_short)
@@ -185,15 +188,19 @@ public class Lipschitz_ implements PlugInFilter
 			cip.getRGB(tmpBytePixels[0], tmpBytePixels[1], tmpBytePixels[2]);
 		}
 
-		int sign = (m_Down ? 1 : -1 );
-		int topdown = (m_Down ? 0 : 255);
 		for (int ii=0; ii < m_channels; ii++)
 		{
 			for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
 			{
 				srcPixels[ii][ij] = (m_short? sign *(tmpShortPixels[ii][ij] & 0xffff):sign *(tmpBytePixels[ii][ij] & 0xff));
-				destPixels[ii][ij] = srcPixels[ii][ij];
+			}
+		}
 
+		for (int ii=0; ii < m_channels; ii++)
+		{
+			for (int ij=0; ij< ImageHeight * ImageWidth; ij++)
+			{
+				destPixels[ii][ij] = srcPixels[ii][ij];
 			}
 		}
 
@@ -202,9 +209,9 @@ public class Lipschitz_ implements PlugInFilter
 		maxz = m_channels;
 
 
-		for (int y = m_roi.y; y < m_roi.y + m_roi.height; y++)   // rows
+		for (int z = 0; z < m_channels; z++)
 		{
-			for (int z = 0; z < m_channels; z++)
+			for (int y = m_roi.y; y < m_roi.y + m_roi.height; y++)   // rows
 			{
 				progress.step();
 				p2= sign * (topdown + (sign) * slope);
@@ -231,9 +238,9 @@ public class Lipschitz_ implements PlugInFilter
 			}
 		}
 
-		for (int y = m_roi.y+ m_roi.height - 1; y >= m_roi.y; y--)   // rows
+		for (int z= 0; z < maxz; z++)
 		{
-			for (int z= 0; z < maxz; z++)
+			for (int y = m_roi.y+ m_roi.height - 1; y >= m_roi.y; y--)   // rows
 			{
 				progress.step();
 				p2= sign * (topdown + (sign) * slope);
