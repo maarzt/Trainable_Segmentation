@@ -27,6 +27,7 @@ import net.imglib2.util.Pair;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import org.junit.Assert;
+import trainableSegmentation.ij2.FeatureStackTest;
 
 import java.net.URL;
 import java.util.NoSuchElementException;
@@ -215,5 +216,9 @@ public class Utils {
 		assertEquals( pixels.length, width * height);
 		final FloatProcessor processor = new FloatProcessor(width, height, pixels.clone());
 		return new ImagePlus( title, processor);
+	}
+
+	public static void main(String... args) {
+		new FeatureStackTest().testLegacyLipschitz();
 	}
 }

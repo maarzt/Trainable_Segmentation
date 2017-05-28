@@ -24,7 +24,7 @@ public class ConvolutionTest {
 
 	private static OpService ops = new Context(OpService.class).getService(OpService.class);
 
-	private static ImagePlus bridgeImage = toGray(Utils.loadImage("bridge.png"));
+	private static ImagePlus bridgeImage = toGray(Utils.loadImage("nuclei.tif"));
 
 	private static ImagePlus toGray(ImagePlus image) {
 		return new ImagePlus(image.getTitle(), image.getProcessor().convertToFloat());
@@ -42,7 +42,6 @@ public class ConvolutionTest {
 		int kernelWidth = 3;
 		int kernelHeight = 3;
 		new Convolver().convolve(resultPlus.getProcessor(), kernel, kernelWidth, kernelHeight);
-		toString(resultPlus);
 
 		Img<FloatType> image = ImagePlusAdapter.convertFloat(imagePlus);
 

@@ -12,8 +12,10 @@ import ij.process.ImageConverter;
 import java.net.URL;
 import java.util.function.Consumer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class BasicTest
 {
 	@Test

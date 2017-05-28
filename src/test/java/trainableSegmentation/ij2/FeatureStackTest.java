@@ -12,15 +12,18 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
+import org.junit.Ignore;
 import org.junit.Test;
 import trainableSegmentation.Utils;
 
 import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Matthias Arzt
@@ -32,7 +35,7 @@ public class FeatureStackTest {
 	private static Img<FloatType> bridgeImg = ImagePlusAdapter.convertFloat(bridgeImage);
 
 	public static void main(String... args) {
-		new FeatureStackTest().testSobel();
+		new FeatureStackTest().testLegacyLipschitz();
 	}
 
 	@Test
@@ -50,44 +53,63 @@ public class FeatureStackTest {
 	public void testGaussStack() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.GAUSSIAN);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createGaussStack(bridgeImg);
-		assertTrue(Utils.psnr(expected, result) > 40);
+		assertImagesEqual(40, expected, result);
+	}
+
+	private void assertImagesEqual(float expectedPsnr, RandomAccessibleInterval<FloatType> expected, RandomAccessibleInterval<FloatType> result) {
+		float psnr = Utils.psnr(expected, result);
+		if(psnr < expectedPsnr)
+			fail("Actual PSNR is lower than expected. Actual: " + psnr + " Expected: " + expectedPsnr);
 	}
 
 	@Test
 	public void testHessianStack() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.HESSIAN);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createHessianStack(bridgeImg);
-		assertTrue(Utils.psnr(expected, result) > 40);
+		assertImagesEqual(40, expected, result);
 	}
 
 	@Test
 	public void testCalculateHessian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateHessianOnChannel(bridgeImage, 8));
 		RandomAccessibleInterval<FloatType>	actual = FeatureStack2.calculateHessianOnChannel(bridgeImg, 8);
-		assertTrue(Utils.psnr(expected, actual) > 40);
+		assertImagesEqual(40, expected, actual);
 	}
 
 	@Test
 	public void testDifferenceOfGaussian() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.DOG);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createDifferenceOfGaussiansStack(bridgeImg);
-		assertTrue(Utils.psnr(expected, result) > 40);
+		assertImagesEqual(40, expected, result);
 	}
 
 	@Test
 	public void testSingleDifferenceOfGaussian() {
 		RandomAccessibleInterval<FloatType> expected = ImagePlusAdapter.wrapFloat(FeatureStack.calculateDoG(bridgeImage, 8, 4));
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.calculateDifferenceOfGaussians(bridgeImg, 8, 4);
-		assertTrue(Utils.psnr(expected, result) > 30);
+		assertImagesEqual(30, expected, result);
 	}
 
 	@Test
 	public void testSobel() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.SOBEL);
 		RandomAccessibleInterval<FloatType> result = FeatureStack2.createSobelStack(bridgeImg);
-		float psnr = Utils.psnr(expected, result);
-		System.out.print(psnr);
-		assertTrue(psnr > 40);
+		assertImagesEqual(40, expected, result);
+	}
+
+	@Ignore
+	@Test
+	public void testLipschitz() {
+		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.LIPSCHITZ);
+		RandomAccessibleInterval<FloatType> result = FeatureStack2.createLipschitzStack(bridgeImg);
+		assertImagesEqual(40, expected, result);
+	}
+
+	@Test
+	public void testLegacyLipschitz() {
+		RandomAccessibleInterval<FloatType> expected = Utils.loadImageFloatType("nuclei-lipschitz-feature.tif");
+		RandomAccessibleInterval<FloatType> result = generateSingleFeature(bridgeImage, FeatureStack.LIPSCHITZ);
+		assertImagesEqual(40, expected, result);
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {

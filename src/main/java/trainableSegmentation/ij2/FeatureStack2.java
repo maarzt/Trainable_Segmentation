@@ -205,4 +205,10 @@ public class FeatureStack2 {
 	private static float norm2(float x, float y) {
 		return (float) Math.sqrt(x * x + y * y);
 	}
+
+	public static RandomAccessibleInterval<FloatType> createLipschitzStack(Img<FloatType> image) {
+		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
+		features.add(image);
+		return Views.stack(features);
+	}
 }

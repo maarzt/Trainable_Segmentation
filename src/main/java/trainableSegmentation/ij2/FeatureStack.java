@@ -2055,29 +2055,11 @@ public class FeatureStack
 	{
 		return new Callable<ImagePlus>(){
 			public ImagePlus call()
-			{							
-				final Lipschitz_ filter = new Lipschitz_();
-				filter.setDownHat(downHat);
-				filter.setTopHat(topHat);
-				filter.m_Slope = slope;
-				
-				// Get channel(s) to process
-				ImagePlus[] channels = extractChannels(originalImage);
-				
-				ImagePlus[] results = new ImagePlus[ channels.length ];
-				
-				for(int ch=0; ch < channels.length; ch++)
-				{
-					ImageProcessor result = channels[ ch ].getProcessor().duplicate().convertToByte(true);
-					filter.Lipschitz2D(result);
-				
-					results[ ch ] = new ImagePlus (availableFeatures[LIPSCHITZ] + "_" + downHat + "_" + topHat + "_" + slope, result.convertToFloat());
-				}
-				
-				return mergeResultChannels(results);
+			{
+				return calculateLipschitz(originalImage, downHat, topHat, slope);
 			}
 		};
-	}	
+	}
 
 	/**
 	 * Add Lipschitz filter image to current stack
@@ -2090,6 +2072,11 @@ public class FeatureStack
 			final boolean topHat,
 			final double slope)
 	{
+		ImagePlus merged = calculateLipschitz(originalImage, downHat, topHat, slope);
+		wholeStack.addSlice(merged.getTitle(), merged.getImageStack().getProcessor(1));		
+	}
+
+	private ImagePlus calculateLipschitz(ImagePlus originalImage, boolean downHat, boolean topHat, double slope) {
 		final Lipschitz_ filter = new Lipschitz_();
 		filter.setDownHat(downHat);
 		filter.setTopHat(topHat);
@@ -2097,21 +2084,20 @@ public class FeatureStack
 
 		// Get channel(s) to process
 		ImagePlus[] channels = extractChannels(originalImage);
-		
+
 		ImagePlus[] results = new ImagePlus[ channels.length ];
-		
+
 		for(int ch=0; ch < channels.length; ch++)
 		{
 			ImageProcessor result = channels[ ch ].getProcessor().duplicate().convertToByte(true);
 			filter.Lipschitz2D(result);
-		
+
 			results[ ch ] = new ImagePlus (availableFeatures[LIPSCHITZ] + "_" + downHat + "_" + topHat + "_" + slope, result.convertToFloat());
 		}
-		
-		ImagePlus merged = mergeResultChannels(results);
-		wholeStack.addSlice(merged.getTitle(), merged.getImageStack().getProcessor(1));		
+
+		return mergeResultChannels(results);
 	}
-	
+
 	/**
 	 * Get slice image processor. Warning: every time this 
 	 * method is called, ImageStack creates a new processor.
