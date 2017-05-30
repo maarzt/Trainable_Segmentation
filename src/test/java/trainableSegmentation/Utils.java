@@ -172,7 +172,10 @@ public class Utils {
 	}
 
 	public static float psnr(RandomAccessibleInterval<FloatType> expected, RandomAccessibleInterval<FloatType> actual) {
-		return (float) (20 * Math.log10(max(expected)) - 10 * Math.log10(meanSquareError(expected, actual)));
+		float meanSquareError = meanSquareError(expected, actual);
+		if(meanSquareError == 0.0)
+			return Float.POSITIVE_INFINITY;
+		return (float) (20 * Math.log10(max(expected)) - 10 * Math.log10(meanSquareError));
 	}
 
 	private static float meanSquareError(RandomAccessibleInterval<FloatType> a, RandomAccessibleInterval<FloatType> b) {
@@ -216,6 +219,13 @@ public class Utils {
 		assertEquals( pixels.length, width * height);
 		final FloatProcessor processor = new FloatProcessor(width, height, pixels.clone());
 		return new ImagePlus( title, processor);
+	}
+
+	public static <T> String pixelsAsString(RandomAccessibleInterval<T> image) {
+		StringJoiner joiner = new StringJoiner(", ");
+		for(T pixel : Views.iterable(image))
+			joiner.add(pixel.toString());
+		return "[" + joiner.toString() + "]";
 	}
 
 	public static void main(String... args) {
