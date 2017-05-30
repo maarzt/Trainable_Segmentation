@@ -2076,7 +2076,7 @@ public class FeatureStack
 		wholeStack.addSlice(merged.getTitle(), merged.getImageStack().getProcessor(1));		
 	}
 
-	private ImagePlus calculateLipschitz(ImagePlus originalImage, boolean downHat, boolean topHat, double slope) {
+	static ImagePlus calculateLipschitz(ImagePlus originalImage, boolean downHat, boolean topHat, double slope) {
 		final Lipschitz_ filter = new Lipschitz_();
 		filter.setDownHat(downHat);
 		filter.setTopHat(topHat);

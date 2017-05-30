@@ -9,10 +9,12 @@ import net.imglib2.Interval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
 import net.imglib2.img.ImagePlusAdapter;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -97,7 +99,20 @@ public class FeatureStackTest {
 		assertImagesEqual(40, expected, result);
 	}
 
-	@Ignore
+	@Test
+	public void testLegacyLipschitz() {
+		RandomAccessibleInterval<FloatType> expected = Utils.loadImageFloatType("nuclei-lipschitz-feature.tif");
+		RandomAccessibleInterval<FloatType> result = generateSingleFeature(bridgeImage, FeatureStack.LIPSCHITZ);
+		assertImagesEqual(40, expected, result);
+	}
+
+	@Test
+	public void testSingleLipschitz() {
+		RandomAccessibleInterval<FloatType> expected = ImageJFunctions.convertFloat(FeatureStack.calculateLipschitz(bridgeImage, true, true, 5));
+		RandomAccessibleInterval<FloatType> result = FeatureStack2.calculateLipschitz(bridgeImg, true, true, 5);
+		assertImagesEqual(40, expected, result);
+	}
+
 	@Test
 	public void testLipschitz() {
 		RandomAccessibleInterval<FloatType> expected = generateSingleFeature(bridgeImage, FeatureStack.LIPSCHITZ);
@@ -105,11 +120,9 @@ public class FeatureStackTest {
 		assertImagesEqual(40, expected, result);
 	}
 
-	@Test
-	public void testLegacyLipschitz() {
-		RandomAccessibleInterval<FloatType> expected = Utils.loadImageFloatType("nuclei-lipschitz-feature.tif");
-		RandomAccessibleInterval<FloatType> result = generateSingleFeature(bridgeImage, FeatureStack.LIPSCHITZ);
-		assertImagesEqual(40, expected, result);
+	private static RandomAccessibleInterval<IntType> toInt(RandomAccessibleInterval<FloatType> input) {
+		Converter<FloatType, IntType> floatToInt = (in, out) -> out.set((int) in.get());
+		return Converters.convert(input, floatToInt, new IntType());
 	}
 
 	private ImageProcessor imageProcessor(RandomAccessibleInterval<FloatType> dy) {

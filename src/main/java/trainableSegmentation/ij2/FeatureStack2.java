@@ -5,7 +5,6 @@ import net.imglib2.Cursor;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.RandomAccess;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
@@ -13,9 +12,9 @@ import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.outofbounds.OutOfBoundsBorderFactory;
 import net.imglib2.outofbounds.OutOfBoundsFactory;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
-import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import net.imglib2.view.composite.RealComposite;
 import org.scijava.Context;
@@ -209,6 +208,24 @@ public class FeatureStack2 {
 	public static RandomAccessibleInterval<FloatType> createLipschitzStack(Img<FloatType> image) {
 		List<RandomAccessibleInterval<FloatType>> features = new ArrayList<>();
 		features.add(image);
+		for(double slope = 5; slope < 30; slope += 5)
+			features.add(calculateLipschitz(image, true, true, slope));
 		return Views.stack(features);
+	}
+
+	public static RandomAccessibleInterval<FloatType> calculateLipschitz(RandomAccessibleInterval<FloatType> image, boolean downHat, boolean topHat, double slope) {
+		Lipschitz2d lipschitz = new Lipschitz2d(topHat, downHat, slope);
+		lipschitz.ops = ops;
+		return toFloat(lipschitz.calculate(toInt(image)));
+	}
+
+	private static RandomAccessibleInterval<IntType> toInt(RandomAccessibleInterval<FloatType> input) {
+		Converter<FloatType, IntType> floatToInt = (in, out) -> out.set((int) in.get());
+		return Converters.convert(input, floatToInt, new IntType());
+	}
+
+	private static RandomAccessibleInterval<FloatType> toFloat(RandomAccessibleInterval<IntType> input) {
+		Converter<IntType, FloatType> intToFloat = (in, out) -> out.set(in.get());
+		return Converters.convert(input, intToFloat, new FloatType());
 	}
 }
